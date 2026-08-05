@@ -1,0 +1,119 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+enum SubscriptionTier {
+  FREE
+  PLUS
+  PRO
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELLED
+  PAST_DUE
+  EXPIRED
+}
+
+enum AccrualType {
+  SIMPLE
+  COMPOUND
+}
+
+enum RiskBand {
+  SAFE
+  MODERATE
+  HIGH_STRESS
+}
+
+model User {
+  id           String        @id @default(cuid())
+  email        String        @unique
+  passwordHash String
+  createdAt    DateTime      @default(now())
+  plans        Plan[]
+  subscription Subscription?
+
+  @@map("users")
+}
+
+model Subscription {
+  id                 String             @id @default(cuid())
+  userId             String             @unique
+  tier               SubscriptionTier
+  status             SubscriptionStatus
+  razorpaySubId      String             @unique
+  razorpayCustomerId String?
+  currentPeriodEnd   DateTime
+  cancelAtPeriodEnd  Boolean            @default(false)
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("subscriptions")
+}
+
+model PaymentEvent {
+  id              String   @id @default(cuid())
+  razorpayEventId String   @unique
+  eventType       String
+  rawPayload      Json
+  userId          String?
+  createdAt       DateTime @default(now())
+
+  @@map("payment_events")
+}
+
+model Plan {
+  id                 String      @id @default(cuid())
+  userId             String
+  name               String
+  // Academic profile
+  degree             String
+  institution        String
+  city               String
+  durationYears      Int
+  tuitionCostPerYear Float
+  livingCostPerYear  Float
+  educationInflation Float       @default(8)
+  generalInflation   Float       @default(6)
+  // Loan configuration
+  principal          Float
+  interestRate       Float       // annual %
+  moratoriumMonths   Int
+  accrualType        AccrualType @default(COMPOUND)
+  repaymentMonths    Int         @default(120) // 10 years default
+  // Results (denormalised for fast read)
+  computedResults    Json?
+  // Relations
+  user               User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  riskReport         RiskReport?
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+
+  @@map("plans")
+}
+
+model RiskReport {
+  id                    String   @id @default(cuid())
+  planId                String   @unique
+  foirPercent           Float
+  riskBand              RiskBand
+  aiSummary             String?  @db.Text
+  mitigationSuggestions String?  @db.Text // JSON array stored as text
+  salaryRangeMin        Float?
+  salaryRangeMax        Float?
+  generatedAt           DateTime @default(now())
+  plan                  Plan     @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  @@map("risk_reports")
+}
