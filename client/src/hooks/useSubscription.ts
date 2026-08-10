@@ -45,17 +45,6 @@ export function useSubscription() {
     return () => clearInterval(interval);
   }, [isPolling]);
 
-  // Load Razorpay Custom Checkout SDK
-  useEffect(() => {
-    const script = document.createElement("script");
-    script.src = "https://checkout.razorpay.com/v1/razorpay.js";
-    script.async = true;
-    document.body.appendChild(script);
-    return () => {
-      document.body.removeChild(script);
-    };
-  }, []);
-
   // Expose function for UI to manually start polling
   const startPolling = () => {
     setIsPolling(true);
