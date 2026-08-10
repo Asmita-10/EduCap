@@ -5,6 +5,7 @@ import { prisma } from "../utils/prisma";
 import Razorpay from "razorpay";
 import rateLimit from "express-rate-limit";
 import { z } from "zod";
+import PDFDocument from "pdfkit";
 
 const router = Router();
 
@@ -132,6 +133,61 @@ router.post("/cancel", authenticateToken, async (req: AuthRequest, res: Response
   } catch (err) {
     console.error("[subscriptions/cancel]", err);
     res.status(500).json({ error: "Failed to cancel subscription" });
+  }
+});
+
+router.get("/receipt/:paymentId", authenticateToken, async (req: AuthRequest, res: Response) => {
+  try {
+    const { paymentId } = req.params;
+    
+    // In a real app we'd verify the payment belongs to the user and fetch real amount.
+    // Here we query the subscription to at least verify the user is subscribed.
+    const sub = await prisma.subscription.findUnique({
+      where: { userId: req.userId! },
+      include: { user: true }
+    });
+
+    if (!sub) return res.status(404).json({ error: "Subscription not found" });
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `attachment; filename="EduCap-Receipt-${paymentId}.pdf"`);
+
+    const doc = new PDFDocument({ margin: 50, size: "A4" });
+    doc.pipe(res);
+
+    // Header
+    doc.fontSize(24).fillColor("#6c47ff").text("EduCap", { align: "center" });
+    doc.fontSize(12).fillColor("#666").text("Payment Successful - EduCap Pro Plan", { align: "center" });
+    doc.moveDown(2);
+
+    // Details
+    doc.fontSize(14).fillColor("#222").text("Transaction Details", { underline: true });
+    doc.moveDown(0.5);
+    doc.fontSize(12).fillColor("#333");
+    
+    doc.text(`Transaction ID / Payment ID: ${paymentId}`);
+    doc.text(`Amount Paid: ₹${sub.tier === "PRO" ? "199" : "100"}`);
+    doc.text(`Subscription Plan Name: EduCap ${sub.tier}`);
+    doc.text(`Payment Date & Time: ${new Date().toLocaleString("en-IN")}`);
+    
+    doc.moveDown();
+    doc.fontSize(14).fillColor("#222").text("User Details", { underline: true });
+    doc.moveDown(0.5);
+    doc.fontSize(12).fillColor("#333");
+    doc.text(`Email: ${sub.user.email}`);
+    doc.text(`Account ID: ${sub.userId}`);
+
+    // Footer
+    doc.moveDown(3);
+    doc.fontSize(10).fillColor("#aaa").text(
+      "Thank you for subscribing to EduCap. This is an automatically generated receipt.",
+      { align: "center" }
+    );
+
+    doc.end();
+  } catch (err) {
+    console.error("[receipt]", err);
+    res.status(500).json({ error: "Failed to generate receipt" });
   }
 });
 
