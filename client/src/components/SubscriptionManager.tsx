@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useSubscription } from "../hooks/useSubscription";
+import { motion } from "framer-motion";
 
 export default function SubscriptionManager() {
   const { subscription, loading, cancelSubscription } = useSubscription();
@@ -11,15 +12,7 @@ export default function SubscriptionManager() {
 
   if (activeTier === "FREE") {
     return (
-      <div className="bg-gray-900 border border-gray-800 rounded-xl px-6 py-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-md">
-        <div>
-          <h3 className="text-lg font-bold text-white">Current Tier: FREE</h3>
-          <p className="text-sm text-gray-300 mt-1">Upgrade to save more plans and unlock AI reports.</p>
-        </div>
-        <a href="#pricing" className="px-6 py-2.5 bg-[var(--accent)] text-white rounded-lg hover:bg-[#3f8679] transition-colors font-semibold shadow-sm whitespace-nowrap">
-          Upgrade
-        </a>
-      </div>
+      null
     );
   }
 
