@@ -8,242 +8,230 @@ interface CustomCheckoutFormProps {
   onSuccess: () => void;
 }
 
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
+
 export default function CustomCheckoutForm({ tier, onClose, onSuccess }: CustomCheckoutFormProps) {
-  const { user } = useAuthStore();
-  const [method, setMethod] = useState<"card" | "upi">("card");
-  
-  // Card state
-  const [cardNumber, setCardNumber] = useState("");
-  const [expiry, setExpiry] = useState("");
-  const [cvv, setCvv] = useState("");
-  const [name, setName] = useState("");
-
-  // UPI state
-  const [vpa, setVpa] = useState("");
-
+  const { user, setAuth, accessToken, refreshToken } = useAuthStore();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const price = tier === "PLUS" ? "100" : "199";
+
+  const downloadReceipt = async (paymentId: string) => {
+    try {
+      const res = await api.get(`/api/subscriptions/receipt/${paymentId}`, { responseType: "blob" });
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `EduCap-Receipt-${paymentId}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.parentNode?.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error("[receipt] PDF download failed", e);
+    }
+  };
+
+  const handlePaymentSuccess = async (response: {
+    razorpay_payment_id: string;
+    razorpay_subscription_id: string;
+    razorpay_signature: string;
+  }) => {
+    try {
+      // 1. HMAC verify on backend — Prisma upserts subscription tier to ACTIVE
+      await api.post("/api/subscriptions/confirm-payment", {
+        razorpay_payment_id: response.razorpay_payment_id,
+        razorpay_subscription_id: response.razorpay_subscription_id,
+        razorpay_signature: response.razorpay_signature,
+        tier,
+      });
+
+      // 2. Immediately update Zustand store — dashboard shows PRO/PLUS without page reload
+      if (user && accessToken && refreshToken) {
+        setAuth({ ...user, tier }, accessToken, refreshToken);
+      }
+
+      // 3. Auto-download PDF receipt
+      await downloadReceipt(response.razorpay_payment_id);
+
+      // 4. Close modal & trigger subscription state refresh via useSubscription poll
+      onSuccess();
+    } catch (err: any) {
+      setError(err.response?.data?.error || "Payment verification failed. Please contact support.");
+      setLoading(false);
+    }
+  };
+
+  const handlePay = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
     try {
-      // 1. Create Subscription
-      const orderRes = await api.post("/api/subscriptions/create-order", { tier });
-      const { subscription_id, amount, key_id } = orderRes.data;
+      const { data } = await api.post("/api/subscriptions/create-order", { tier });
+      const { subscription_id, key_id } = data;
 
-      // 2. Setup Razorpay
+      if (!window.Razorpay) {
+        throw new Error("Razorpay SDK not loaded. Please refresh the page.");
+      }
+
+      // Standard Checkout for ALL payment types (card + UPI).
+      // The headless createPayment() API blocks international card BINs even in test mode.
+      // Standard Checkout runs on Razorpay's domain: card/UPI switching happens inside
+      // the modal, and test mode shows Razorpay's mock bank auth screen.
       const options = {
         key: key_id,
         subscription_id,
-        amount,
+        currency: "INR",
         name: "EduCap",
-        description: `EduCap ${tier} Subscription`,
+        description: `EduCap ${tier} Subscription — Rs.${price}/mo`,
         prefill: {
           email: user?.email || "test@educap.com",
-          contact: "9999999999"
+          contact: "9999999999",
+        },
+        notes: { tier },
+        theme: { color: "#10b981" },
+        handler: handlePaymentSuccess,
+        modal: {
+          ondismiss: () => setLoading(false),
+          confirm_close: true,
         },
       };
 
-      const rzp = new (window as any).Razorpay(options);
+      const rzp = new window.Razorpay(options);
 
-      // Define payment data based on method
-      let paymentData: any = {
-        amount,
-        email: user?.email || "test@educap.com",
-        contact: "9999999999",
-        recurring: "1",
-      };
-
-      if (method === "card") {
-        const [month, year] = expiry.split("/");
-        paymentData = {
-          ...paymentData,
-          method: "card",
-          'card[name]': name || "Test User",
-          'card[number]': cardNumber.replace(/\s+/g, ''),
-          'card[expiry_month]': month,
-          'card[expiry_year]': year,
-          'card[cvv]': cvv,
-        };
-      } else {
-        paymentData = {
-          ...paymentData,
-          method: "upi",
-          vpa,
-        };
-      }
-
-      // Handle successful payment
-      rzp.on('payment.success', async function (response: any) {
-        try {
-          await api.post("/api/subscriptions/confirm-payment", {
-            razorpay_payment_id: response.razorpay_payment_id,
-            razorpay_subscription_id: response.razorpay_subscription_id,
-            razorpay_signature: response.razorpay_signature,
-            tier
-          });
-          onSuccess();
-        } catch (err: any) {
-          setError(err.response?.data?.error || "Payment verification failed.");
-          setLoading(false);
+      rzp.on("payment.failed", (resp: any) => {
+        const errStr = JSON.stringify(resp.error || {}).toLowerCase();
+        if (errStr.includes("international")) {
+          setError(
+            "International cards are not supported on this test account. In Razorpay's modal, enter card 5104 0155 5555 5558 | Exp: 12/28 | CVV: 123 — or switch to UPI and type success@razorpay."
+          );
+        } else if (errStr.includes("recurring") || errStr.includes("not eligible")) {
+          setError(
+            "This card doesn't support recurring mandates. Use test Mastercard: 5104 0155 5555 5558 | Expiry: 12/28 | CVV: 123"
+          );
+        } else {
+          setError(resp.error?.description || "Payment failed. Please try again.");
         }
-      });
-
-      // Handle payment failure
-      rzp.on('payment.error', function (resp: any) {
-        setError(resp.error?.description || "Payment failed.");
         setLoading(false);
       });
 
-      // 3. Headless submission
-      rzp.createPayment(paymentData);
-
+      rzp.open();
     } catch (err: any) {
-      console.error(err);
-      setError(err.response?.data?.error || "Failed to initiate payment");
+      console.error("[checkout]", err);
+      setError(err.message || err.response?.data?.error || "Failed to open payment. Please refresh.");
       setLoading(false);
     }
   };
 
   return (
-    <div style={{
-      position: "fixed",
-      top: 0, left: 0, right: 0, bottom: 0,
-      background: "rgba(9, 9, 15, 0.8)",
-      backdropFilter: "blur(4px)",
-      zIndex: 1000,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      padding: "24px"
-    }}>
-      <div className="card animate-fadeInUp" style={{ width: "100%", maxWidth: "400px", padding: "32px", position: "relative" }}>
-        <button 
+    <div
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: "rgba(9, 9, 15, 0.82)",
+        backdropFilter: "blur(5px)",
+        zIndex: 1000,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "24px",
+      }}
+    >
+      <div
+        className="card animate-fadeInUp"
+        style={{ width: "100%", maxWidth: "420px", padding: "36px", position: "relative" }}
+      >
+        <button
           onClick={onClose}
-          style={{ position: "absolute", top: "16px", right: "16px", background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer", fontSize: "1.2rem" }}
+          style={{
+            position: "absolute",
+            top: "16px",
+            right: "16px",
+            background: "none",
+            border: "none",
+            color: "var(--text-muted)",
+            cursor: "pointer",
+            fontSize: "1.2rem",
+          }}
+          aria-label="Close"
         >
           ✕
         </button>
 
-        <h2 style={{ fontSize: "1.5rem", marginBottom: "8px" }}>Complete Payment</h2>
-        <p style={{ color: "var(--text-muted)", marginBottom: "24px", fontSize: "0.9rem" }}>
-          Subscribe to EduCap {tier} for ₹{tier === "PLUS" ? "100" : "199"}/mo.
+        <h2 style={{ fontSize: "1.5rem", marginBottom: "6px" }}>Complete Payment</h2>
+        <p style={{ color: "var(--text-muted)", marginBottom: "28px", fontSize: "0.9rem" }}>
+          Subscribe to <strong>EduCap {tier}</strong> for Rs.{price}/mo.
         </p>
 
         {error && (
-          <div style={{ background: "var(--danger-bg)", color: "var(--danger)", padding: "12px", borderRadius: "8px", marginBottom: "24px", fontSize: "0.85rem", border: "1px solid var(--danger-light)" }}>
+          <div
+            style={{
+              background: "var(--danger-bg)",
+              color: "var(--danger)",
+              padding: "12px 14px",
+              borderRadius: "8px",
+              marginBottom: "24px",
+              fontSize: "0.85rem",
+              border: "1px solid var(--danger-light)",
+              lineHeight: "1.5",
+            }}
+          >
             {error}
           </div>
         )}
 
-        <div style={{ display: "flex", gap: "8px", marginBottom: "24px" }}>
-          <button 
-            type="button"
-            onClick={() => setMethod("card")}
-            style={{ 
-              flex: 1, padding: "10px", borderRadius: "8px", fontSize: "0.9rem", fontWeight: 600, cursor: "pointer",
-              background: method === "card" ? "rgba(108, 71, 255, 0.15)" : "transparent",
-              color: method === "card" ? "var(--primary-light)" : "var(--text-muted)",
-              border: method === "card" ? "1px solid var(--primary-light)" : "1px solid var(--border)"
-            }}
-          >
-            Credit / Debit Card
-          </button>
-          <button 
-            type="button"
-            onClick={() => setMethod("upi")}
-            style={{ 
-              flex: 1, padding: "10px", borderRadius: "8px", fontSize: "0.9rem", fontWeight: 600, cursor: "pointer",
-              background: method === "upi" ? "rgba(108, 71, 255, 0.15)" : "transparent",
-              color: method === "upi" ? "var(--primary-light)" : "var(--text-muted)",
-              border: method === "upi" ? "1px solid var(--primary-light)" : "1px solid var(--border)"
-            }}
-          >
-            UPI
-          </button>
+        {/* Test Mode Helper */}
+        <div
+          style={{
+            background: "rgba(16,185,129,0.07)",
+            border: "1px solid rgba(16,185,129,0.25)",
+            borderRadius: "8px",
+            padding: "12px 14px",
+            marginBottom: "24px",
+            fontSize: "0.82rem",
+            color: "var(--text-muted)",
+            lineHeight: "1.7",
+          }}
+        >
+          <strong style={{ color: "var(--accent)" }}>Test Mode</strong>
+          <br />
+          In the Razorpay popup, use:
+          <br />
+          Card: <code style={{ userSelect: "all" }}>5104 0155 5555 5558</code> | Exp:{" "}
+          <code>12/28</code> | CVV: <code>123</code>
+          <br />
+          <em>or</em> switch to UPI and type <code>success@razorpay</code>
         </div>
 
-        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-          {method === "card" ? (
-            <>
-              <div className="form-group">
-                <label className="form-label">Card Number</label>
-                <input 
-                  type="text" 
-                  className="form-input" 
-                  placeholder="4111 1111 1111 1111" 
-                  value={cardNumber}
-                  onChange={e => setCardNumber(e.target.value)}
-                  required
-                />
-              </div>
-              <div style={{ display: "flex", gap: "12px" }}>
-                <div className="form-group" style={{ flex: 1 }}>
-                  <label className="form-label">Expiry</label>
-                  <input 
-                    type="text" 
-                    className="form-input" 
-                    placeholder="MM/YY" 
-                    value={expiry}
-                    onChange={e => setExpiry(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="form-group" style={{ flex: 1 }}>
-                  <label className="form-label">CVV</label>
-                  <input 
-                    type="text" 
-                    className="form-input" 
-                    placeholder="123" 
-                    value={cvv}
-                    onChange={e => setCvv(e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
-              <div className="form-group">
-                <label className="form-label">Name on Card</label>
-                <input 
-                  type="text" 
-                  className="form-input" 
-                  placeholder="John Doe" 
-                  value={name}
-                  onChange={e => setName(e.target.value)}
-                />
-              </div>
-            </>
-          ) : (
-            <div className="form-group">
-              <label className="form-label">UPI ID / VPA</label>
-              <input 
-                type="text" 
-                className="form-input" 
-                placeholder="success@razorpay" 
-                value={vpa}
-                onChange={e => setVpa(e.target.value)}
-                required
-              />
-              <p style={{ fontSize: "0.75rem", color: "var(--text-dim)", marginTop: "4px" }}>
-                Test mode: use success@razorpay
-              </p>
-            </div>
-          )}
-
-          <button 
-            type="submit" 
-            className="btn btn-primary" 
+        <form onSubmit={handlePay}>
+          <button
+            type="submit"
+            className="btn btn-primary"
             disabled={loading}
-            style={{ width: "100%", justifyContent: "center", marginTop: "16px" }}
+            style={{ width: "100%", justifyContent: "center", padding: "14px" }}
           >
-            {loading ? "Processing..." : `Pay ₹${tier === "PLUS" ? "100" : "199"}`}
+            {loading ? "Opening Payment..." : `Pay Rs.${price} via Razorpay`}
           </button>
         </form>
-        
-        <p style={{ textAlign: "center", fontSize: "0.75rem", color: "var(--text-dim)", marginTop: "20px" }}>
-          Secured by Razorpay. An authentication popup may appear for verification.
+
+        <p
+          style={{
+            textAlign: "center",
+            fontSize: "0.73rem",
+            color: "var(--text-dim)",
+            marginTop: "18px",
+          }}
+        >
+          Secured by Razorpay. A popup will open — select Card or UPI inside the Razorpay window.
         </p>
       </div>
     </div>
