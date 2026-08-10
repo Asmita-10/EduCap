@@ -21,6 +21,20 @@ export default function CustomCheckoutForm({ tier, onClose, onSuccess }: CustomC
 
   const price = tier === "PLUS" ? "100" : "199";
 
+  const loadRazorpayScript = () => {
+    return new Promise((resolve) => {
+      if (window.Razorpay) {
+        resolve(true);
+        return;
+      }
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
   const downloadReceipt = async (paymentId: string) => {
     try {
       const res = await api.get(`/api/subscriptions/receipt/${paymentId}`, { responseType: "blob" });
@@ -73,6 +87,13 @@ export default function CustomCheckoutForm({ tier, onClose, onSuccess }: CustomC
     setError("");
 
     try {
+      const isLoaded = await loadRazorpayScript();
+      if (!isLoaded) {
+        setError("Razorpay SDK failed to load. Please check your connection.");
+        setLoading(false);
+        return;
+      }
+
       const { data } = await api.post("/api/subscriptions/create-order", { tier });
       const { subscription_id, key_id } = data;
 
@@ -109,11 +130,11 @@ export default function CustomCheckoutForm({ tier, onClose, onSuccess }: CustomC
         const errStr = JSON.stringify(resp.error || {}).toLowerCase();
         if (errStr.includes("international")) {
           setError(
-            "International cards are not supported on this test account. In Razorpay's modal, enter card 5104 0155 5555 5558 | Exp: 12/28 | CVV: 123 — or switch to UPI and type success@razorpay."
+            "International cards are not supported on this test account. In Razorpay's modal, enter card 4111 1111 1111 1111 | Exp: 12/28 | CVV: 123 — or switch to UPI and type success@razorpay."
           );
         } else if (errStr.includes("recurring") || errStr.includes("not eligible")) {
           setError(
-            "This card doesn't support recurring mandates. Use test Mastercard: 5104 0155 5555 5558 | Expiry: 12/28 | CVV: 123"
+            "This card doesn't support recurring mandates. Use test Visa: 4111 1111 1111 1111 | Expiry: 12/28 | CVV: 123"
           );
         } else {
           setError(resp.error?.description || "Payment failed. Please try again.");
@@ -206,7 +227,7 @@ export default function CustomCheckoutForm({ tier, onClose, onSuccess }: CustomC
           <br />
           In the Razorpay popup, use:
           <br />
-          Card: <code style={{ userSelect: "all" }}>5104 0155 5555 5558</code> | Exp:{" "}
+          Card: <code style={{ userSelect: "all" }}>4111 1111 1111 1111</code> | Exp:{" "}
           <code>12/28</code> | CVV: <code>123</code>
           <br />
           <em>or</em> switch to UPI and type <code>success@razorpay</code>
