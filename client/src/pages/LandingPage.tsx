@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import PricingGrid from "../components/PricingGrid";
+import LandingPricing from "../components/LandingPricing";
 import heroBg from "../assets/hero_illustration.png";
 import step1Img from "../assets/step1.jpg";
 import step2Img from "../assets/step2.jpg";
@@ -327,36 +327,34 @@ export default function LandingPage() {
         style={{ background: "var(--bg)", borderTop: "1px solid var(--border)" }}
       >
         <div className="container mx-auto px-4 max-w-7xl">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-[var(--primary)] mb-4">Simple, transparent pricing</h2>
-            <p className="text-[var(--text-muted)] max-w-lg mx-auto text-center">
-              Choose the plan that fits your student loan journey. Test mode only — no real charges.
+          <div className="text-center my-12 flex flex-col items-center justify-center">
+            <h2 className="text-[36px] font-bold text-[var(--primary)] mb-6">Simple, transparent pricing</h2>
+            <p className="text-[16px] text-gray-500 font-normal max-w-2xl text-center">
+              Invest in your education journey. Choose the plan that fits your goals and start planning smarter today.
             </p>
           </div>
-          <PricingGrid currentTier={null} />
+          <LandingPricing />
         </div>
       </section>
 
       {/* Footer */}
-      <footer
-        style={{
-          borderTop: "1px solid var(--border)",
-          padding: "32px 0",
-          textAlign: "center",
-          color: "var(--text-muted)",
-          fontSize: "0.85rem",
-        }}
-      >
-        <div className="container">
-          <p>🎓 <strong style={{ color: "var(--text)" }}>EduCap</strong> — Student-first loan planning</p>
-          <div style={{ marginTop: "12px", display: "flex", gap: "16px", justifyContent: "center" }}>
-            <Link to="/terms" style={{ color: "var(--text-muted)", textDecoration: "none" }}>Terms of Service</Link>
-            <Link to="/privacy" style={{ color: "var(--text-muted)", textDecoration: "none" }}>Privacy Policy</Link>
+      <footer className="border-t border-gray-200 pt-10 pb-16 bg-[var(--bg)] text-[13px] text-gray-500">
+        <div className="container mx-auto px-4 max-w-7xl">
+          <div className="flex flex-row justify-between items-center w-full gap-4">
+            <div className="flex-1 text-left whitespace-nowrap">
+              © 2024 Edu Cap. All rights reserved.
+            </div>
+            
+            <div className="flex-1 text-center font-bold text-gray-700 text-[14px]">
+              Edu Cap
+            </div>
+            
+            <div className="flex-1 flex justify-end gap-4 whitespace-nowrap">
+              <Link to="/privacy" className="hover:text-gray-800 underline decoration-gray-300 underline-offset-2">Privacy Policy</Link>
+              <Link to="/terms" className="hover:text-gray-800 underline decoration-gray-300 underline-offset-2">Terms of Service</Link>
+              <Link to="/support" className="hover:text-gray-800 underline decoration-gray-300 underline-offset-2">Contact Support</Link>
+            </div>
           </div>
-          <p style={{ marginTop: "12px", fontSize: "0.75rem", color: "var(--text-dim)" }}>
-            EduCap provides estimates and financial education, not licensed financial advice.
-            Always consult a certified financial advisor before making borrowing decisions.
-          </p>
         </div>
       </footer>
     </div>
