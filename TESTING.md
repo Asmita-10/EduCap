@@ -11,7 +11,7 @@ In India, the RBI mandates Additional Factor of Authentication (AFA) for all onl
 3. Click **Subscribe to Plus** (or Pro).
 4. The EduCap custom checkout modal will appear.
 5. In the **Credit / Debit Card** tab, enter the following details:
-   - **Card Number**: `4111 1111 1111 1111`
+   - **Card Number**: `5104 0155 5555 5558` (Mastercard Subscriptions Test Card)
    - **Expiry**: `12/28` (or any future date)
    - **CVV**: `123` (or any 3 digits)
    - **Name**: `Test User`
