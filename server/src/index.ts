@@ -101,7 +101,7 @@ async function startServer() {
   app.use("/api/admin", adminRoutes);
 
   // 404 handler
-  app.use((_req, res) => {
+  app.use((_req, res: express.Response) => {
     res.status(404).json({ error: "Not found" });
   });
 
