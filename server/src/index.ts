@@ -44,47 +44,30 @@ app.get("/health", (_req, res) => {
 
 // Development mode: start in‑memory MongoDB and seed data
 async function startServer() {
+  /*
   if (process.env.NODE_ENV !== "production") {
-    const { MongoMemoryReplSet } = await import("mongodb-memory-server");
-    const replSet = await MongoMemoryReplSet.create({ replSet: { storageEngine: "wiredTiger" } });
-    const uri = replSet.getUri();
-    // Ensure a database name is present in the connection string (Prisma requires it)
-    const dbName = "educap";
-    // Insert db name before query parameters if present
-    const finalUri = uri.includes("?") ? uri.replace("/?", `/${dbName}?`) : (uri.endsWith("/") ? `${uri}${dbName}` : `${uri}/${dbName}`);
-    process.env.DATABASE_URL = finalUri;
-    console.log("🗄️ In‑memory MongoDB URI for Prisma:", finalUri);
-    console.log("🗄️ In‑memory MongoDB started at", uri);
-    // Push Prisma schema
-    const { execSync } = await import("child_process");
-    try {
-      execSync("npx prisma db push", { stdio: "inherit" });
-      console.log("✅ Prisma schema pushed to in‑memory DB");
-    } catch (e) {
-      console.error("❌ Prisma db push failed", e);
-      process.exit(1);
-    }
-    // Initialise Prisma client now that DATABASE_URL is set
-    const { PrismaClient } = await import("@prisma/client");
-    global.__prisma = new PrismaClient({ log: ["warn", "error"] });
-    console.log("🛠️ Prisma client re‑initialised for in‑memory DB");
-    // Seed admin & student accounts
-    const { prisma } = await import("./utils/prisma");
-    const bcrypt = await import("bcrypt");
-    const adminHash = await bcrypt.default.hash("password", 10);
-    await prisma.admin.create({
-      data: { email: "admin@gmail.com", passwordHash: adminHash, name: "Admin" },
-    }).catch((e) => {
-      if (e.code !== "P2002") console.error(e);
-    });
-    const studentHash = await bcrypt.default.hash("password123", 10);
-    await prisma.user.create({
-      data: { email: "test@example.com", passwordHash: studentHash, name: "Test Student" },
-    }).catch((e) => {
-      if (e.code !== "P2002") console.error(e);
-    });
-    console.log("✅ Dev data seeded (admin & student)");
+    // const { MongoMemoryReplSet } = await import("mongodb-memory-server");
+    // const replSet = await MongoMemoryReplSet.create({ replSet: { storageEngine: "wiredTiger" } });
+    // const uri = replSet.getUri();
+    // const dbName = "educap";
+    // const finalUri = uri.includes("?") ? uri.replace("/?", `/${dbName}?`) : (uri.endsWith("/") ? `${uri}${dbName}` : `${uri}/${dbName}`);
+    // process.env.DATABASE_URL = finalUri;
+    // console.log("🗄️ In‑memory MongoDB URI for Prisma:", finalUri);
+    //
+    // const { execSync } = await import("child_process");
+    // execSync("npx prisma db push", { stdio: "inherit" });
+    //
+    // const { PrismaClient } = await import("@prisma/client");
+    // global.__prisma = new PrismaClient({ log: ["warn", "error"] });
+    //
+    // const { prisma } = await import("./utils/prisma");
+    // const bcrypt = await import("bcrypt");
+    // const adminHash = await bcrypt.default.hash("password", 10);
+    // await prisma.admin.create({ data: { email: "admin@gmail.com", passwordHash: adminHash, name: "Admin" } }).catch(() => {});
+    // const studentHash = await bcrypt.default.hash("password123", 10);
+    // await prisma.user.create({ data: { email: "test@example.com", passwordHash: studentHash, name: "Test Student" } }).catch(() => {});
   }
+  */
 
   // Register API routes (after DB is ready)
   const { default: authRoutes } = await import("./routes/auth");
