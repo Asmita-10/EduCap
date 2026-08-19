@@ -1,7 +1,10 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useSubscription } from "../hooks/useSubscription";
 import api from "../services/api";
+import toast from "react-hot-toast";
+import MockPaymentModal from "./MockPaymentModal";
 
 interface PricingGridProps {
   currentTier?: string | null;
@@ -11,52 +14,69 @@ export default function PricingGrid({ currentTier }: PricingGridProps) {
   const navigate = useNavigate();
   const { isPolling, startPolling } = useSubscription();
 
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedTier, setSelectedTier] = useState<"PLUS" | "PRO">("PLUS");
+  const [modalAmount, setModalAmount] = useState(10000); // paise
+
   const handleSubscribe = async (tier: "PLUS" | "PRO") => {
     if (currentTier === null || currentTier === undefined) {
       navigate("/login?redirect=/dashboard");
       return;
     }
 
+    const toastId = toast.loading("Preparing checkout...");
     try {
       const res = await api.post("/api/subscriptions/create-order", { tier });
-      const { subscription_id, key_id } = res.data;
-
-      const options = {
-        key: key_id,
-        subscription_id: subscription_id,
-        name: "EduCap",
-        description: `EduCap ${tier} Plan`,
-        handler: async function (response: any) {
-          try {
-            const confirmRes = await api.post("/api/subscriptions/confirm-payment", {
-              tier,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_subscription_id: response.razorpay_subscription_id,
-              razorpay_signature: response.razorpay_signature
-            });
-            
-            if (confirmRes.data.success) {
-              startPolling();
-            }
-          } catch (err) {
-            alert("Payment verification failed");
-          }
-        },
-        theme: {
-          color: "#4a9d8e"
-        }
-      };
-
-      const rzp = new (window as any).Razorpay(options);
-      rzp.on("payment.failed", function (response: any) {
-        alert(response.error.description);
-      });
-      rzp.open();
-    } catch (err) {
-      console.error(err);
-      alert("Failed to initiate payment");
+      const { subscription_id, amount } = res.data;
+      toast.dismiss(toastId);
+      setSelectedTier(tier);
+      setModalAmount(amount || (tier === "PLUS" ? 10000 : 19900));
+      setModalOpen(true);
+      // Store subscription_id for confirmation after payment
+      sessionStorage.setItem("pending_sub_id", subscription_id);
+    } catch (err: any) {
+      toast.dismiss(toastId);
+      const status = err.response?.status;
+      const errorMsg = err.response?.data?.error;
+      if (status === 401 || status === 403 || !err.response) {
+        toast.error("Session expired. Please log in again.");
+        setTimeout(() => navigate("/login?redirect=/dashboard"), 1500);
+      } else {
+        toast.error(errorMsg || "Failed to prepare checkout. Please try again.");
+      }
     }
   };
+
+  const handlePaymentSuccess = async (paymentId: string, subscriptionId: string, signature: string) => {
+    setModalOpen(false);
+    const verifyToast = toast.loading("Confirming your subscription...");
+    try {
+      const pendingSubId = sessionStorage.getItem("pending_sub_id") || subscriptionId;
+      const confirmRes = await api.post("/api/subscriptions/confirm-payment", {
+        tier: selectedTier,
+        razorpay_payment_id: paymentId,
+        razorpay_subscription_id: pendingSubId,
+        razorpay_signature: signature,
+      });
+      toast.dismiss(verifyToast);
+      if (confirmRes.data.success) {
+        sessionStorage.removeItem("pending_sub_id");
+        toast.success(`🎉 Upgraded to EduCap ${selectedTier} successfully!`);
+        startPolling();
+      }
+    } catch (err: any) {
+      toast.dismiss(verifyToast);
+      toast.error(err.response?.data?.error || "Subscription confirmation failed. Contact support.");
+    }
+  };
+
+  const handleModalDismiss = () => {
+    setModalOpen(false);
+    sessionStorage.removeItem("pending_sub_id");
+    toast("Checkout cancelled", { icon: "ℹ️" });
+  };
+
+
 
   const activeTier = currentTier || "FREE";
 
@@ -73,7 +93,15 @@ export default function PricingGrid({ currentTier }: PricingGridProps) {
   );
 
   return (
-    <div className="w-full max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
+    <>
+      <MockPaymentModal
+        isOpen={modalOpen}
+        tier={selectedTier}
+        amount={modalAmount}
+        onSuccess={handlePaymentSuccess}
+        onDismiss={handleModalDismiss}
+      />
+      <div className="w-full max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
       {/* Free Tier */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -187,6 +215,7 @@ export default function PricingGrid({ currentTier }: PricingGridProps) {
         </button>
       </motion.div>
     </div>
+    </>
   );
 }
 

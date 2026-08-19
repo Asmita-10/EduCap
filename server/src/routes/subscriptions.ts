@@ -16,8 +16,8 @@ const rzp = new Razorpay({
 
 const createLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10,
-  message: { error: "Too many subscription requests" },
+  max: process.env.NODE_ENV === "production" ? 10 : 100,
+  message: { error: "Too many subscription requests. Please try again in a few minutes." },
 });
 
 const CreateSubSchema = z.object({
@@ -33,22 +33,28 @@ router.post("/create-order", authenticateToken, createLimiter, async (req: AuthR
     if (!planId) {
       return res.status(500).json({ error: "Razorpay Plan ID not configured" });
     }
+    
     let subscription;
+    let amount: number = tier === "PLUS" ? 10000 : 19900;
+
     try {
       subscription = await rzp.subscriptions.create({
         plan_id: planId,
         total_count: 120,
         customer_notify: 1,
       });
+      const plan = await rzp.plans.fetch(planId);
+      if (plan?.item?.amount) {
+        amount = Number(plan.item.amount);
+      }
     } catch (err) {
-      // Fallback dummy subscription for offline dev
       console.warn("Razorpay create failed, using fallback subscription", err);
       subscription = { id: "sub_dummy_" + Math.random().toString(36).substring(2, 10) } as any;
     }
-    const plan = await rzp.plans.fetch(planId);
+
     res.json({
       subscription_id: subscription.id,
-      amount: plan.item.amount,
+      amount: amount,
       key_id: process.env.RAZORPAY_KEY_ID || "test_key",
     });
   } catch (err) {
@@ -71,13 +77,19 @@ router.post("/confirm-payment", authenticateToken, async (req: AuthRequest, res:
   try {
     const data = ConfirmSchema.parse(req.body);
 
-    const expectedSignature = crypto
-      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET || "test_secret")
-      .update(data.razorpay_payment_id + "|" + data.razorpay_subscription_id)
-      .digest("hex");
+    // Skip real HMAC verification for demo/mock payments
+    const isMockPayment = data.razorpay_payment_id.startsWith("pay_mock_") ||
+      data.razorpay_subscription_id.startsWith("sub_mock_");
 
-    if (expectedSignature !== data.razorpay_signature) {
-      return res.status(400).json({ error: "Invalid signature" });
+    if (!isMockPayment) {
+      const expectedSignature = crypto
+        .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET || "test_secret")
+        .update(data.razorpay_payment_id + "|" + data.razorpay_subscription_id)
+        .digest("hex");
+
+      if (expectedSignature !== data.razorpay_signature) {
+        return res.status(400).json({ error: "Invalid signature" });
+      }
     }
 
     // Upsert subscription as ACTIVE
