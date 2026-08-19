@@ -13,12 +13,23 @@ export function useSubscription() {
   const [subscription, setSubscription] = useState<SubscriptionState | null>(null);
   const [loading, setLoading] = useState(true);
   const [isPolling, setIsPolling] = useState(false);
-  const { user } = useAuthStore();
 
   const fetchSubscription = async () => {
     try {
       const res = await api.get("/api/subscriptions/me");
       setSubscription(res.data);
+      
+      // Sync fetched subscription tier to the auth store user profile
+      const currentUser = useAuthStore.getState().user;
+      if (currentUser) {
+        const dbTier = res.data && res.data.status === "ACTIVE" ? res.data.tier : "FREE";
+        if (currentUser.tier !== dbTier) {
+          useAuthStore.getState().setUser({
+            ...currentUser,
+            tier: dbTier,
+          });
+        }
+      }
     } catch (err) {
       console.error("Failed to fetch subscription", err);
     } finally {
@@ -44,6 +55,17 @@ export function useSubscription() {
     }
     return () => clearInterval(interval);
   }, [isPolling]);
+
+  // Load Razorpay Custom Checkout SDK
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/razorpay.js";
+    script.async = true;
+    document.body.appendChild(script);
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
 
   // Expose function for UI to manually start polling
   const startPolling = () => {

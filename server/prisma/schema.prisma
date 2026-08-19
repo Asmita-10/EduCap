@@ -2,11 +2,12 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "windows"]
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mongodb"
   url      = env("DATABASE_URL")
 }
 
@@ -36,19 +37,23 @@ enum RiskBand {
 }
 
 model User {
-  id           String        @id @default(cuid())
+  id           String        @id @default(auto()) @map("_id") @db.ObjectId
   email        String        @unique
   passwordHash String
+  name         String?
+  phone        String?
   createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
   plans        Plan[]
   subscription Subscription?
+  payments     Payment[]
 
   @@map("users")
 }
 
 model Subscription {
-  id                 String             @id @default(cuid())
-  userId             String             @unique
+  id                 String             @id @default(auto()) @map("_id") @db.ObjectId
+  userId             String             @unique @db.ObjectId
   tier               SubscriptionTier
   status             SubscriptionStatus
   razorpaySubId      String             @unique
@@ -57,25 +62,27 @@ model Subscription {
   cancelAtPeriodEnd  Boolean            @default(false)
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
+  cancelledAt        DateTime?
   user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  payments           Payment[]
 
   @@map("subscriptions")
 }
 
 model PaymentEvent {
-  id              String   @id @default(cuid())
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
   razorpayEventId String   @unique
   eventType       String
   rawPayload      Json
-  userId          String?
+  userId          String?  @db.ObjectId
   createdAt       DateTime @default(now())
 
   @@map("payment_events")
 }
 
 model Plan {
-  id                 String      @id @default(cuid())
-  userId             String
+  id                 String      @id @default(auto()) @map("_id") @db.ObjectId
+  userId             String      @db.ObjectId
   name               String
   // Academic profile
   degree             String
@@ -104,16 +111,43 @@ model Plan {
 }
 
 model RiskReport {
-  id                    String   @id @default(cuid())
-  planId                String   @unique
+  id                    String   @id @default(auto()) @map("_id") @db.ObjectId
+  planId                String   @unique @db.ObjectId
   foirPercent           Float
   riskBand              RiskBand
-  aiSummary             String?  @db.Text
-  mitigationSuggestions String?  @db.Text // JSON array stored as text
+  aiSummary             String?
+  mitigationSuggestions String?  // JSON array stored as text
   salaryRangeMin        Float?
   salaryRangeMax        Float?
   generatedAt           DateTime @default(now())
   plan                  Plan     @relation(fields: [planId], references: [id], onDelete: Cascade)
 
   @@map("risk_reports")
+}
+
+model Admin {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  email        String   @unique
+  passwordHash String
+  name         String?
+  createdAt    DateTime @default(now())
+
+  @@map("admins")
+}
+
+model Payment {
+  id                 String       @id @default(auto()) @map("_id") @db.ObjectId
+  subscriptionId     String?      @db.ObjectId
+  userId             String?      @db.ObjectId
+  razorpayPaymentId  String       @unique
+  amount             Float
+  currency           String       @default("INR")
+  status             String       // "Success" or "Failed"
+  paymentDate        DateTime     @default(now())
+  createdAt          DateTime     @default(now())
+
+  subscription       Subscription? @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+  user               User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("payments")
 }

@@ -1,33 +1,31 @@
+// Server entry point with in‑memory MongoDB for development
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import rateLimit from "express-rate-limit";
+import cookieParser from "cookie-parser";
 
 dotenv.config();
 
-import authRoutes from "./routes/auth";
-import plansRoutes from "./routes/plans";
-import calculateRoutes from "./routes/calculate";
-import exportRoutes from "./routes/export";
-import subscriptionsRoutes from "./routes/subscriptions";
-import webhooksRoutes from "./routes/webhooks";
+// import authRoutes from "./routes/auth";
+// import plansRoutes from "./routes/plans";
+// import calculateRoutes from "./routes/calculate";
+// import exportRoutes from "./routes/export";
+// import subscriptionsRoutes from "./routes/subscriptions";
+// import webhooksRoutes from "./routes/webhooks";
+// import adminRoutes from "./routes/admin";
 
 const app = express();
 
 // Middleware
-app.use(cors({
-  origin: process.env.CLIENT_ORIGIN || "http://localhost:5173",
-  credentials: true,
-}));
+app.use(cookieParser());
+app.use(cors({ origin: "http://localhost:5173", credentials: true }));
 
-// Webhooks must be parsed as raw buffer for signature verification
-const webhookLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100, // higher limit for webhooks
-});
-app.use("/api/webhooks/razorpay", webhookLimiter, express.raw({ type: "application/json" }), webhooksRoutes);
+// Webhooks raw parsing
+const webhookLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 100 });
+// app.use("/api/webhooks/razorpay", webhookLimiter, express.raw({ type: "application/json" }), webhooksRoutes);
 
-// Regular JSON parsing for other routes
+// JSON body parsing
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
@@ -44,28 +42,81 @@ app.get("/health", (_req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
-// API Routes
-app.use("/api/auth", authRoutes);
-app.use("/api/subscriptions", subscriptionsRoutes);
-app.use("/api/plans", plansRoutes);
-app.use("/api/calculate", calculateRoutes);
-app.use("/api/plans", exportRoutes); // /api/plans/:id/export
+// Development mode: start in‑memory MongoDB and seed data
+async function startServer() {
+  if (process.env.NODE_ENV !== "production") {
+    const { MongoMemoryReplSet } = await import("mongodb-memory-server");
+    const replSet = await MongoMemoryReplSet.create({ replSet: { storageEngine: "wiredTiger" } });
+    const uri = replSet.getUri();
+    // Ensure a database name is present in the connection string (Prisma requires it)
+    const dbName = "educap";
+    // Insert db name before query parameters if present
+    const finalUri = uri.includes("?") ? uri.replace("/?", `/${dbName}?`) : (uri.endsWith("/") ? `${uri}${dbName}` : `${uri}/${dbName}`);
+    process.env.DATABASE_URL = finalUri;
+    console.log("🗄️ In‑memory MongoDB URI for Prisma:", finalUri);
+    console.log("🗄️ In‑memory MongoDB started at", uri);
+    // Push Prisma schema
+    const { execSync } = await import("child_process");
+    try {
+      execSync("npx prisma db push", { stdio: "inherit" });
+      console.log("✅ Prisma schema pushed to in‑memory DB");
+    } catch (e) {
+      console.error("❌ Prisma db push failed", e);
+      process.exit(1);
+    }
+    // Initialise Prisma client now that DATABASE_URL is set
+    const { PrismaClient } = await import("@prisma/client");
+    global.__prisma = new PrismaClient({ log: ["warn", "error"] });
+    console.log("🛠️ Prisma client re‑initialised for in‑memory DB");
+    // Seed admin & student accounts
+    const { prisma } = await import("./utils/prisma");
+    const bcrypt = await import("bcrypt");
+    const adminHash = await bcrypt.default.hash("password", 10);
+    await prisma.admin.create({
+      data: { email: "admin@gmail.com", passwordHash: adminHash, name: "Admin" },
+    }).catch((e) => {
+      if (e.code !== "P2002") console.error(e);
+    });
+    const studentHash = await bcrypt.default.hash("password123", 10);
+    await prisma.user.create({
+      data: { email: "test@example.com", passwordHash: studentHash, name: "Test Student" },
+    }).catch((e) => {
+      if (e.code !== "P2002") console.error(e);
+    });
+    console.log("✅ Dev data seeded (admin & student)");
+  }
 
-// 404 handler
-app.use((_req, res) => {
-  res.status(404).json({ error: "Not found" });
-});
+  // Register API routes (after DB is ready)
+  const { default: authRoutes } = await import("./routes/auth");
+  const { default: subscriptionsRoutes } = await import("./routes/subscriptions");
+  const { default: plansRoutes } = await import("./routes/plans");
+  const { default: calculateRoutes } = await import("./routes/calculate");
+  const { default: exportRoutes } = await import("./routes/export");
+  const { default: adminRoutes } = await import("./routes/admin");
+  app.use("/api/auth", authRoutes);
+  app.use("/api/subscriptions", subscriptionsRoutes);
+  app.use("/api/plans", plansRoutes);
+  app.use("/api/calculate", calculateRoutes);
+  app.use("/api/plans", exportRoutes); // /api/plans/:id/export
+  app.use("/api/admin", adminRoutes);
 
-// Global error handler
-app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
-  console.error("[server error]", err);
-  res.status(500).json({ error: "Internal server error" });
-});
+  // 404 handler
+  app.use((_req, res) => {
+    res.status(404).json({ error: "Not found" });
+  });
 
-const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => {
-  console.log(`🚀 EduCap server running on http://localhost:${PORT}`);
-});
+  // Global error handler
+  app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+    console.error("[server error]", err);
+    res.status(500).json({ error: "Internal server error" });
+  });
+
+  const PORT = process.env.PORT || 3001;
+  app.listen(PORT, () => {
+    console.log(`🚀 EduCap server running on http://localhost:${PORT}`);
+  });
+}
+
+startServer();
 
 export default app;
-setInterval(() => {}, 1000);

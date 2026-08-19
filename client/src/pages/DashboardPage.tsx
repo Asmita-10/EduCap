@@ -30,7 +30,7 @@ interface Plan {
 }
 
 export default function DashboardPage() {
-  const { user, isPlus, isPro } = useAuthStore();
+  const { user, isPlus } = useAuthStore();
   const { reset } = useWizardStore();
   const navigate = useNavigate();
   const [plans, setPlans] = useState<Plan[]>([]);

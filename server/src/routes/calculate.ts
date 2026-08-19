@@ -1,7 +1,7 @@
 import { Router, Request, Response } from "express";
 import { z } from "zod";
 import { runFullComputation } from "../services/financialEngine";
-
+import { authenticateToken } from "../middleware/auth";
 const router = Router();
 
 const CalculateSchema = z.object({
@@ -19,7 +19,7 @@ const CalculateSchema = z.object({
 });
 
 // POST /api/calculate — anonymous calculation (no auth required)
-router.post("/", (req: Request, res: Response) => {
+router.post("/", authenticateToken, (req: Request, res: Response) => {
   try {
     const data = CalculateSchema.parse(req.body);
     const result = runFullComputation(data);

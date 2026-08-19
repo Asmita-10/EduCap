@@ -1,7 +1,9 @@
+// Unified login page with role selector (Student / Admin)
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../services/api";
 import { useAuthStore } from "../store";
+import { useAdminStore } from "../store/useAdminStore";
 import toast from "react-hot-toast";
 
 interface AuthPageProps {
@@ -13,17 +15,39 @@ export default function AuthPage({ mode }: AuthPageProps) {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const { setAuth } = useAuthStore();
+  const { setAdmin } = useAdminStore();
   const navigate = useNavigate();
+  const [role, setRole] = useState<"student" | "admin">("student");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
-      const endpoint = mode === "login" ? "/api/auth/login" : "/api/auth/register";
+      let endpoint = "";
+      if (mode === "login") {
+        endpoint = role === "student" ? "/api/auth/login" : "/api/admin/login";
+      } else {
+        // registration is only for students
+        endpoint = "/api/auth/register";
+      }
       const { data } = await api.post(endpoint, { email, password });
-      setAuth(data.user, data.accessToken, data.refreshToken);
-      toast.success(mode === "login" ? "Welcome back!" : "Account created! Welcome to EduCap 🎓");
-      navigate("/dashboard");
+      if (mode === "login") {
+        if (role === "student") {
+          setAuth(data.user, data.accessToken, data.refreshToken);
+          toast.success("Welcome back!");
+          navigate("/dashboard");
+        } else {
+          // Admin login
+          setAdmin(data.admin);
+          toast.success("Admin logged in!");
+          navigate("/admin/dashboard");
+        }
+      } else {
+        // Register flow (student only)
+        setAuth(data.user, data.accessToken, data.refreshToken);
+        toast.success("Account created! Welcome to EduCap 🎓");
+        navigate("/dashboard");
+      }
     } catch (err: any) {
       toast.error(err.response?.data?.error || "Something went wrong");
     } finally {
@@ -54,6 +78,30 @@ export default function AuthPage({ mode }: AuthPageProps) {
               ? "Log in to access your saved plans"
               : "Start planning smarter — it's free"}
           </p>
+          {mode === "login" && (
+            <div style={{ margin: "12px 0", textAlign: "left" }}>
+              <label style={{ marginRight: "12px" }}>
+                <input
+                  type="radio"
+                  name="role"
+                  value="student"
+                  checked={role === "student"}
+                  onChange={() => setRole("student")}
+                />
+                Student
+              </label>
+              <label>
+                <input
+                  type="radio"
+                  name="role"
+                  value="admin"
+                  checked={role === "admin"}
+                  onChange={() => setRole("admin")}
+                />
+                Admin
+              </label>
+            </div>
+          )}
         </div>
 
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
@@ -104,13 +152,15 @@ export default function AuthPage({ mode }: AuthPageProps) {
 
         <p style={{ textAlign: "center", color: "var(--text-muted)", fontSize: "0.875rem" }}>
           {mode === "login" ? (
-            <>Don't have an account?{" "}
+            <>
+              Don't have an account?{' '}
               <Link to="/register" style={{ color: "var(--primary-light)", fontWeight: 600 }}>
                 Sign up free
               </Link>
             </>
           ) : (
-            <>Already have an account?{" "}
+            <>
+              Already have an account?{' '}
               <Link to="/login" style={{ color: "var(--primary-light)", fontWeight: 600 }}>
                 Sign in
               </Link>

@@ -10,6 +10,7 @@
     "install:all": "cd server && npm install && cd ../client && npm install"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "mongodb-memory-server": "^11.2.0"
   }
 }

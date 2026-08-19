@@ -8,8 +8,17 @@ export interface AuthRequest extends Request {
 }
 
 export function authenticateToken(req: AuthRequest, res: Response, next: NextFunction): void {
-  const authHeader = req.headers["authorization"];
-  const token = authHeader && authHeader.split(" ")[1];
+  // Try Authorization header first
+  let token: string | undefined;
+  const authHeader = req.headers["authorization"] as string | undefined;
+  if (authHeader) {
+    token = authHeader.split(" ")[1];
+  }
+  // Fallback to cookie named access_token or accessToken
+  if (!token && req.cookies) {
+    token = req.cookies["access_token"] || req.cookies["accessToken"];
+  }
+
 
   if (!token) {
     res.status(401).json({ error: "Access token required" });

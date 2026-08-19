@@ -44,6 +44,7 @@ router.post("/", async (req: Request, res: Response) => {
 
     // Process event
     const entity = payload.payload.subscription?.entity;
+    let dbSub;
     
     if (entity) {
       const subId = entity.id;
@@ -69,7 +70,7 @@ router.post("/", async (req: Request, res: Response) => {
           mappedStatus = "ACTIVE";
       }
 
-      const dbSub = await prisma.subscription.findUnique({
+      dbSub = await prisma.subscription.findUnique({
         where: { razorpaySubId: subId },
       });
 
@@ -91,6 +92,7 @@ router.post("/", async (req: Request, res: Response) => {
         razorpayEventId: eventId,
         eventType: eventType,
         rawPayload: payload,
+        userId: dbSub?.userId,
       },
     });
 

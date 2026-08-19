@@ -1,8 +1,7 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useSubscription } from "../hooks/useSubscription";
-import CustomCheckoutForm from "./CustomCheckoutForm";
+import api from "../services/api";
 
 interface PricingGridProps {
   currentTier?: string | null;
@@ -11,20 +10,52 @@ interface PricingGridProps {
 export default function PricingGrid({ currentTier }: PricingGridProps) {
   const navigate = useNavigate();
   const { isPolling, startPolling } = useSubscription();
-  const [checkoutTier, setCheckoutTier] = useState<"PLUS" | "PRO" | null>(null);
 
-  const handleSubscribe = (tier: "PLUS" | "PRO") => {
-    // We only pass currentTier if user is logged in
+  const handleSubscribe = async (tier: "PLUS" | "PRO") => {
     if (currentTier === null || currentTier === undefined) {
       navigate("/login?redirect=/dashboard");
       return;
     }
-    setCheckoutTier(tier);
-  };
 
-  const handleSuccess = () => {
-    setCheckoutTier(null);
-    startPolling();
+    try {
+      const res = await api.post("/api/subscriptions/create-order", { tier });
+      const { subscription_id, key_id } = res.data;
+
+      const options = {
+        key: key_id,
+        subscription_id: subscription_id,
+        name: "EduCap",
+        description: `EduCap ${tier} Plan`,
+        handler: async function (response: any) {
+          try {
+            const confirmRes = await api.post("/api/subscriptions/confirm-payment", {
+              tier,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_subscription_id: response.razorpay_subscription_id,
+              razorpay_signature: response.razorpay_signature
+            });
+            
+            if (confirmRes.data.success) {
+              startPolling();
+            }
+          } catch (err) {
+            alert("Payment verification failed");
+          }
+        },
+        theme: {
+          color: "#4a9d8e"
+        }
+      };
+
+      const rzp = new (window as any).Razorpay(options);
+      rzp.on("payment.failed", function (response: any) {
+        alert(response.error.description);
+      });
+      rzp.open();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to initiate payment");
+    }
   };
 
   const activeTier = currentTier || "FREE";
@@ -155,14 +186,7 @@ export default function PricingGrid({ currentTier }: PricingGridProps) {
             : activeTier === "PRO" ? "Current Plan" : "Subscribe to Pro"}
         </button>
       </motion.div>
-
-      {checkoutTier && (
-        <CustomCheckoutForm 
-          tier={checkoutTier} 
-          onClose={() => setCheckoutTier(null)} 
-          onSuccess={handleSuccess} 
-        />
-      )}
     </div>
   );
 }
+
