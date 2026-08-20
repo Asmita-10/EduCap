@@ -45,9 +45,10 @@ router.post("/register", async (req: Request, res: Response) => {
     });
 
     const { accessToken, refreshToken } = generateTokens(user.id);
+    const isProd = process.env.NODE_ENV === "production";
     // Set httpOnly cookies for auth tokens
-    res.cookie('access_token', accessToken, { httpOnly: true, sameSite: 'lax', path: '/' });
-    res.cookie('refresh_token', refreshToken, { httpOnly: true, sameSite: 'lax', path: '/' });
+    res.cookie('access_token', accessToken, { httpOnly: true, sameSite: isProd ? 'none' : 'lax', secure: isProd, path: '/' });
+    res.cookie('refresh_token', refreshToken, { httpOnly: true, sameSite: isProd ? 'none' : 'lax', secure: isProd, path: '/' });
     return res.status(201).json({
       user: { id: user.id, email: user.email, tier: "FREE" },
       accessToken,
@@ -82,9 +83,10 @@ router.post("/login", async (req: Request, res: Response) => {
     const tier = sub?.status === "ACTIVE" ? sub.tier : "FREE";
 
     const { accessToken, refreshToken } = generateTokens(user.id);
+    const isProd = process.env.NODE_ENV === "production";
     // Set httpOnly cookies for auth tokens
-    res.cookie('access_token', accessToken, { httpOnly: true, sameSite: 'lax', path: '/' });
-    res.cookie('refresh_token', refreshToken, { httpOnly: true, sameSite: 'lax', path: '/' });
+    res.cookie('access_token', accessToken, { httpOnly: true, sameSite: isProd ? 'none' : 'lax', secure: isProd, path: '/' });
+    res.cookie('refresh_token', refreshToken, { httpOnly: true, sameSite: isProd ? 'none' : 'lax', secure: isProd, path: '/' });
     return res.json({
       user: { id: user.id, email: user.email, tier },
       accessToken,

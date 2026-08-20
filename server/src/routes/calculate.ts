@@ -19,7 +19,7 @@ const CalculateSchema = z.object({
 });
 
 // POST /api/calculate — anonymous calculation (no auth required)
-router.post("/", authenticateToken, (req: Request, res: Response) => {
+router.post("/", (req: Request, res: Response) => {
   try {
     const data = CalculateSchema.parse(req.body);
     const result = runFullComputation(data);
