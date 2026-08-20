@@ -56,42 +56,42 @@ const AdminDashboardPage = () => {
       value: metrics.totalUsers.toLocaleString(), 
       subtext: "Registered student accounts",
       icon: Users, 
-      iconBg: "bg-blue-50 text-blue-700 border border-blue-100",
+      iconBg: "bg-blue-50 text-blue-700 border border-blue-100", // Blue for people metrics
     },
     { 
       label: "Active Subscriptions", 
       value: metrics.activeSubscriptions.toLocaleString(), 
       subtext: "Plus & Pro paid subscribers",
       icon: Sparkles, 
-      iconBg: "bg-[#4A9D8E]/15 text-[#4A9D8E] border border-[#4A9D8E]/25",
+      iconBg: "bg-emerald-50 text-emerald-700 border border-emerald-100", // Green for revenue/growth
     },
     { 
       label: "Monthly Revenue (MRR)", 
       value: `₹${metrics.mrr.toLocaleString()}`, 
       subtext: "Recurring subscription revenue",
       icon: TrendingUp, 
-      iconBg: "bg-emerald-50 text-emerald-700 border border-emerald-100",
+      iconBg: "bg-emerald-50 text-emerald-700 border border-emerald-100", // Green for revenue/growth
     },
     { 
       label: "Free Tier Users", 
       value: metrics.freeTierUsers.toLocaleString(), 
       subtext: "Standard free accounts",
       icon: UserCheck, 
-      iconBg: "bg-amber-50 text-amber-700 border border-amber-100",
+      iconBg: "bg-blue-50 text-blue-700 border border-blue-100", // Blue for people metrics
     },
   ];
 
   return (
     <div className="w-full max-w-7xl mx-auto flex flex-col gap-6 pb-8">
       {/* Header with Eyebrow Admin Badge & Balanced Title */}
-      <div className="flex flex-col gap-1.5">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col mb-2">
+        <div className="mb-1">
           <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-[var(--primary)]/10 text-[var(--primary)] border border-[var(--primary)]/15">
             <ShieldCheck className="w-3.5 h-3.5" />
             Admin Portal
           </span>
         </div>
-        <h1 className="text-2xl font-bold font-['Outfit'] text-[var(--primary)] tracking-tight">
+        <h1 className="text-2xl font-bold font-['Outfit'] text-[var(--primary)] tracking-tight mt-0.5 mb-1">
           Dashboard Overview
         </h1>
         <p className="text-sm text-gray-500">
@@ -106,16 +106,16 @@ const AdminDashboardPage = () => {
           return (
             <div 
               key={idx} 
-              className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm hover:shadow-md hover:border-[var(--accent)] transition-all duration-200 flex flex-col justify-between"
+              className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm hover:shadow-md hover:border-[var(--accent)] transition-all duration-200 flex flex-col justify-start"
             >
-              <div className={`w-11 h-11 rounded-xl flex items-center justify-center mb-4 ${card.iconBg}`}>
+              <div className={`w-11 h-11 rounded-xl flex items-center justify-center mb-5 ${card.iconBg}`}>
                 <Icon className="w-5 h-5" />
               </div>
-              <div>
-                <p className="text-xs font-bold uppercase tracking-wider text-gray-500">
+              <div className="flex flex-col">
+                <p className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">
                   {card.label}
                 </p>
-                <h3 className="text-3xl font-bold font-['Outfit'] text-[var(--primary)] mt-1 mb-1">
+                <h3 className="text-3xl font-bold font-['Outfit'] text-[var(--primary)] leading-none mb-1.5">
                   {card.value}
                 </h3>
                 <p className="text-xs text-gray-400 font-normal">
@@ -251,7 +251,7 @@ const AdminDashboardPage = () => {
                   <Activity className="w-4 h-4 text-gray-500" />
                   <div>
                     <span className="text-sm font-semibold text-[var(--primary)] block">Database Sync</span>
-                    <span className="text-xs text-gray-400">Prisma ORM & In-Memory Replica</span>
+                    <span className="text-xs text-gray-400">Prisma ORM & MongoDB Atlas</span>
                   </div>
                 </div>
                 <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200/50">
