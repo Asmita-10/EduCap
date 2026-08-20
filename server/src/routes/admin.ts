@@ -22,12 +22,13 @@ router.post("/login", async (req: Request, res: Response) => {
 
     const token = jwt.sign({ id: admin.id, role: "admin" }, JWT_SECRET, { expiresIn: "24h" });
 
+    const isProd = process.env.NODE_ENV === "production";
     // Store in httpOnly cookie
     res.cookie("admin_token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: isProd,
       maxAge: 24 * 60 * 60 * 1000, // 24h
-      sameSite: "lax",
+      sameSite: isProd ? "none" : "lax",
     });
 
     res.json({ success: true, admin: { id: admin.id, email: admin.email, name: admin.name } });
