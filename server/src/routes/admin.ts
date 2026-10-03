@@ -1,5 +1,5 @@
 import { Router, Request, Response } from "express";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { prisma } from "../utils/prisma";
 import { authenticateAdminToken, AdminAuthRequest } from "../middleware/adminAuth";
@@ -14,7 +14,11 @@ const JWT_SECRET = process.env.JWT_SECRET || "fallback_secret_educap_2024";
 router.post("/login", async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
-    const admin = await prisma.admin.findUnique({ where: { email } });
+    if (!email || !password) {
+      return res.status(400).json({ error: "Email and password are required" });
+    }
+    const normalizedEmail = email.toLowerCase().trim();
+    const admin = await prisma.admin.findUnique({ where: { email: normalizedEmail } });
     if (!admin) return res.status(401).json({ error: "Invalid credentials" });
 
     const isValid = await bcrypt.compare(password, admin.passwordHash);

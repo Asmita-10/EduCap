@@ -25,12 +25,12 @@ export default function AuthPage({ mode }: AuthPageProps) {
     try {
       let endpoint = "";
       if (mode === "login") {
-        endpoint = role === "student" ? "/api/auth/login" : "/api/admin/login";
+        endpoint = "/api/auth/login";
       } else {
         // registration is only for students
         endpoint = "/api/auth/register";
       }
-      const { data } = await api.post(endpoint, { email, password });
+      const { data } = await api.post(endpoint, { email, password, role });
       if (mode === "login") {
         if (role === "student") {
           setAuth(data.user, data.accessToken, data.refreshToken);
