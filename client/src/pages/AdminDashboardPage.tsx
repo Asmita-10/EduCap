@@ -13,7 +13,8 @@ import {
   RefreshCw,
   ShieldCheck,
   Server,
-  Zap
+  Zap,
+  IndianRupee
 } from "lucide-react";
 
 const AdminDashboardPage = () => {
@@ -56,28 +57,28 @@ const AdminDashboardPage = () => {
       value: metrics.totalUsers.toLocaleString(), 
       subtext: "Registered student accounts",
       icon: Users, 
-      iconBg: "bg-blue-50 text-blue-700 border border-blue-100", // Blue for people metrics
+      iconBg: "bg-blue-50 text-blue-600 border border-blue-100",
     },
     { 
       label: "Active Subscriptions", 
       value: metrics.activeSubscriptions.toLocaleString(), 
       subtext: "Plus & Pro paid subscribers",
       icon: Sparkles, 
-      iconBg: "bg-emerald-50 text-emerald-700 border border-emerald-100", // Green for revenue/growth
+      iconBg: "bg-emerald-50 text-emerald-600 border border-emerald-100",
     },
     { 
       label: "Monthly Revenue (MRR)", 
       value: `₹${metrics.mrr.toLocaleString()}`, 
       subtext: "Recurring subscription revenue",
-      icon: TrendingUp, 
-      iconBg: "bg-emerald-50 text-emerald-700 border border-emerald-100", // Green for revenue/growth
+      icon: IndianRupee, 
+      iconBg: "bg-slate-900 text-white border border-slate-800",
     },
     { 
       label: "Free Tier Users", 
       value: metrics.freeTierUsers.toLocaleString(), 
       subtext: "Standard free accounts",
       icon: UserCheck, 
-      iconBg: "bg-blue-50 text-blue-700 border border-blue-100", // Blue for people metrics
+      iconBg: "bg-blue-50 text-blue-600 border border-blue-100",
     },
   ];
 
@@ -99,20 +100,20 @@ const AdminDashboardPage = () => {
         </p>
       </div>
 
-      {/* Stat Cards Grid (Single clean label per card, no duplicate pills) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 w-full">
+      {/* Stat Cards Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 w-full">
         {statCards.map((card, idx) => {
           const Icon = card.icon;
           return (
             <div 
               key={idx} 
-              className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm hover:shadow-md hover:border-[var(--accent)] transition-all duration-200 flex flex-col justify-start"
+              className="bg-white border border-gray-200/80 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-start"
             >
-              <div className={`w-11 h-11 rounded-xl flex items-center justify-center mb-5 ${card.iconBg}`}>
+              <div className={`w-11 h-11 rounded-xl flex items-center justify-center mb-4 ${card.iconBg}`}>
                 <Icon className="w-5 h-5" />
               </div>
               <div className="flex flex-col">
-                <p className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-1">
                   {card.label}
                 </p>
                 <h3 className="text-3xl font-bold font-['Outfit'] text-[var(--primary)] leading-none mb-1.5">
@@ -128,9 +129,9 @@ const AdminDashboardPage = () => {
       </div>
 
       {/* Panels Row: Quick Actions & System Status */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full items-stretch">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 w-full items-stretch">
         {/* Quick Actions Panel */}
-        <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm flex flex-col justify-between">
+        <div className="bg-white border border-gray-200/80 rounded-2xl p-6 shadow-sm flex flex-col justify-between">
           <div>
             <div className="flex items-center gap-2.5 mb-1.5">
               <div className="w-8 h-8 rounded-lg bg-[var(--accent)]/10 text-[var(--accent)] flex items-center justify-center">
@@ -144,13 +145,13 @@ const AdminDashboardPage = () => {
               Jump straight into common administrative tasks and reports.
             </p>
             
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-2.5">
               <Link 
                 to="/admin/users" 
-                className="group flex items-center justify-between p-3.5 rounded-xl border border-gray-200/80 bg-gray-50/60 hover:bg-[var(--accent)]/5 hover:border-[var(--accent)] transition-all duration-200 no-underline"
+                className="group flex items-center justify-between p-3.5 rounded-xl border border-gray-200/80 bg-gray-50/60 hover:bg-[var(--accent)]/5 hover:border-[var(--accent)]/40 transition-all duration-200 no-underline"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-white border border-gray-200 flex items-center justify-center text-[var(--primary)] group-hover:border-[var(--accent)] transition-colors shrink-0">
+                  <div className="w-9 h-9 rounded-lg bg-white border border-gray-200 flex items-center justify-center text-[var(--primary)] group-hover:border-[var(--accent)]/40 transition-colors shrink-0">
                     <Users className="w-4 h-4" />
                   </div>
                   <div>
@@ -163,10 +164,10 @@ const AdminDashboardPage = () => {
 
               <Link 
                 to="/admin/subscriptions" 
-                className="group flex items-center justify-between p-3.5 rounded-xl border border-gray-200/80 bg-gray-50/60 hover:bg-[var(--accent)]/5 hover:border-[var(--accent)] transition-all duration-200 no-underline"
+                className="group flex items-center justify-between p-3.5 rounded-xl border border-gray-200/80 bg-gray-50/60 hover:bg-[var(--accent)]/5 hover:border-[var(--accent)]/40 transition-all duration-200 no-underline"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-white border border-gray-200 flex items-center justify-center text-[var(--primary)] group-hover:border-[var(--accent)] transition-colors shrink-0">
+                  <div className="w-9 h-9 rounded-lg bg-white border border-gray-200 flex items-center justify-center text-[var(--primary)] group-hover:border-[var(--accent)]/40 transition-colors shrink-0">
                     <CreditCard className="w-4 h-4" />
                   </div>
                   <div>
@@ -179,25 +180,25 @@ const AdminDashboardPage = () => {
 
               <Link 
                 to="/admin/analytics" 
-                className="group flex items-center justify-between p-3.5 rounded-xl border border-[var(--accent)]/30 bg-[var(--accent)]/5 hover:bg-[var(--accent)]/10 hover:border-[var(--accent)] transition-all duration-200 no-underline"
+                className="group flex items-center justify-between p-3.5 rounded-xl border border-teal-200/60 bg-teal-50/50 hover:bg-teal-50 hover:border-teal-300/60 transition-all duration-200 no-underline"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-white border border-[var(--accent)]/30 flex items-center justify-center text-[var(--accent)] shrink-0">
+                  <div className="w-9 h-9 rounded-lg bg-white border border-teal-200/60 flex items-center justify-center text-teal-600 shrink-0">
                     <TrendingUp className="w-4 h-4" />
                   </div>
                   <div>
-                    <span className="text-sm font-semibold text-[var(--accent)] block">Go to Analytics Dashboard</span>
+                    <span className="text-sm font-semibold text-teal-700 block">Go to Analytics Dashboard</span>
                     <span className="text-xs text-gray-500">Explore growth charts, MRR and conversion</span>
                   </div>
                 </div>
-                <ArrowRight className="w-4 h-4 text-[var(--accent)] group-hover:translate-x-0.5 transition-all" />
+                <ArrowRight className="w-4 h-4 text-teal-500 group-hover:translate-x-0.5 transition-all" />
               </Link>
             </div>
           </div>
         </div>
 
         {/* System Status Panel */}
-        <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm flex flex-col justify-between">
+        <div className="bg-white border border-gray-200/80 rounded-2xl p-6 shadow-sm flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-1.5">
               <div className="flex items-center gap-2.5">
@@ -217,7 +218,7 @@ const AdminDashboardPage = () => {
               Live heartbeat and service health monitoring.
             </p>
 
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-2.5">
               <div className="flex items-center justify-between p-3.5 rounded-xl bg-gray-50/80 border border-gray-200/60">
                 <div className="flex items-center gap-3">
                   <Server className="w-4 h-4 text-gray-500" />
@@ -226,7 +227,7 @@ const AdminDashboardPage = () => {
                     <span className="text-xs text-gray-400">REST endpoints & Financial Engine</span>
                   </div>
                 </div>
-                <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200/50">
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200/60">
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                   Online
                 </span>
@@ -240,7 +241,7 @@ const AdminDashboardPage = () => {
                     <span className="text-xs text-gray-400">Payment verification gateway</span>
                   </div>
                 </div>
-                <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200/50">
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200/60">
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                   Active
                 </span>
@@ -254,7 +255,7 @@ const AdminDashboardPage = () => {
                     <span className="text-xs text-gray-400">Prisma ORM & MongoDB Atlas</span>
                   </div>
                 </div>
-                <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200/50">
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200/60">
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                   Healthy
                 </span>
