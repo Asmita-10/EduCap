@@ -72,6 +72,13 @@ router.post("/login", async (req: Request, res: Response) => {
     const normalizedEmail = email.toLowerCase().trim();
 
     if (role.toUpperCase() === "ADMIN") {
+      // Guard: if this email belongs to a Student account, reject immediately.
+      // Students must use the Student toggle — they cannot log in as Admin.
+      const studentWithSameEmail = await prisma.user.findUnique({ where: { email: normalizedEmail } });
+      if (studentWithSameEmail) {
+        return res.status(401).json({ error: "Invalid credentials" });
+      }
+
       const admin = await prisma.admin.findUnique({ where: { email: normalizedEmail } });
       if (!admin) {
         return res.status(401).json({ error: "Invalid credentials" });
@@ -113,6 +120,13 @@ router.post("/login", async (req: Request, res: Response) => {
     }
 
     if (role.toUpperCase() === "STUDENT") {
+      // Guard: if this email belongs to an Admin account, reject immediately.
+      // Admins must use the Admin toggle — they cannot log in as Students.
+      const adminWithSameEmail = await prisma.admin.findUnique({ where: { email: normalizedEmail } });
+      if (adminWithSameEmail) {
+        return res.status(401).json({ error: "Invalid credentials" });
+      }
+
       const user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
       if (!user) {
         return res.status(401).json({ error: "Invalid credentials" });
