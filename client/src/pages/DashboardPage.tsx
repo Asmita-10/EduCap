@@ -98,7 +98,7 @@ export default function DashboardPage() {
           <div style={{ display: "flex", gap: "12px" }}>
             {plans.length >= 2 && (
               <Link to="/compare" className="btn btn-secondary" id="compare-plans-btn">
-                ⚖️ Compare Plans
+                Compare Plans
               </Link>
             )}
             <button className="btn btn-primary" onClick={handleNewPlan} id="new-plan-btn">
@@ -136,7 +136,9 @@ export default function DashboardPage() {
               color: "var(--text-muted)",
             }}
           >
-            <div style={{ fontSize: "3rem", marginBottom: "16px" }}>📋</div>
+            <div style={{ fontSize: "3rem", marginBottom: "16px", opacity: 0.3 }}>
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10,9 9,9 8,9"/></svg>
+            </div>
             <h3 style={{ marginBottom: "8px", color: "var(--text)" }}>No plans yet</h3>
             <p style={{ marginBottom: "24px" }}>Create your first loan plan to see your risk analysis here.</p>
             <button className="btn btn-primary btn-lg" onClick={handleNewPlan} id="first-plan-btn">
@@ -168,7 +170,7 @@ export default function DashboardPage() {
                     </div>
                     {bandInfo && (
                       <div className={`badge ${bandInfo.bgClass}`} style={{ flexShrink: 0 }}>
-                        {bandInfo.emoji} {bandInfo.label}
+                        {bandInfo.label}
                       </div>
                     )}
                   </div>
@@ -200,7 +202,7 @@ export default function DashboardPage() {
                   {/* Salary range */}
                   {plan.riskReport?.salaryRangeMin && (
                     <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginBottom: "12px" }}>
-                      💼 Estimated salary: {formatINR(plan.riskReport.salaryRangeMin)}&nbsp;–&nbsp;
+                      Estimated salary: {formatINR(plan.riskReport.salaryRangeMin)}&nbsp;–&nbsp;
                       {formatINR(plan.riskReport.salaryRangeMax)}/mo
                     </div>
                   )}
@@ -218,7 +220,7 @@ export default function DashboardPage() {
                       title={!isPlus() ? "Plus/Pro feature" : "Export PDF"}
                       style={{ opacity: isPlus() ? 1 : 0.5 }}
                     >
-                      📄 Export PDF
+                      Export PDF
                     </button>
                     <button
                       className="btn btn-ghost btn-sm"

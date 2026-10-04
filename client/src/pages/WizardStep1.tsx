@@ -239,7 +239,7 @@ export default function WizardStep1({ onNext }: WizardStep1Props) {
           }}
         >
           <span style={{ color: "var(--text-muted)", fontSize: "0.9rem" }}>
-            📊 Estimated Total Inflated Expense
+            Estimated Total Inflated Expense
           </span>
           <span
             style={{

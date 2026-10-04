@@ -187,7 +187,7 @@ export default function ResultsPanel({ results }: ResultsPanelProps) {
           border: "1px solid rgba(108,71,255,0.25)",
         }}
       >
-        <h3 style={{ marginBottom: "8px" }}>💾 Save This Plan</h3>
+        <h3 style={{ marginBottom: "8px" }}>Save This Plan</h3>
         <p style={{ color: "var(--text-muted)", fontSize: "0.9rem", marginBottom: "16px" }}>
           {isAuthenticated()
             ? user?.tier === "FREE"
@@ -238,7 +238,7 @@ export default function ResultsPanel({ results }: ResultsPanelProps) {
           lineHeight: 1.6,
         }}
       >
-        ⚠️ EduCap provides estimates and financial education, not licensed financial advice.
+        EduCap provides estimates and financial education, not licensed financial advice.
         All projections are based on inputs provided and carry inherent assumptions about future inflation and salary outcomes.
         Consult a certified financial advisor before making borrowing decisions.
       </p>

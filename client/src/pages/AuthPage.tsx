@@ -5,6 +5,7 @@ import api from "../services/api";
 import { useAuthStore } from "../store";
 import { useAdminStore } from "../store/useAdminStore";
 import toast from "react-hot-toast";
+import { GraduationCap } from "lucide-react";
 
 interface AuthPageProps {
   mode: "login" | "register";
@@ -45,7 +46,7 @@ export default function AuthPage({ mode }: AuthPageProps) {
       } else {
         // Register flow (student only)
         setAuth(data.user, data.accessToken, data.refreshToken);
-        toast.success("Account created! Welcome to EduCap 🎓");
+        toast.success("Account created! Welcome to EduCap.");
         navigate("/dashboard");
       }
     } catch (err: any) {
@@ -69,7 +70,9 @@ export default function AuthPage({ mode }: AuthPageProps) {
       <div className="card animate-fadeInUp" style={{ width: "100%", maxWidth: "420px", padding: "40px" }}>
         {/* Logo */}
         <div style={{ textAlign: "center", marginBottom: "32px" }}>
-          <div style={{ fontSize: "2rem", marginBottom: "8px" }}>🎓</div>
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: "8px" }}>
+            <GraduationCap style={{ width: "36px", height: "36px", color: "var(--accent)" }} />
+          </div>
           <h1 style={{ fontSize: "1.5rem", marginBottom: "4px" }}>
             {mode === "login" ? "Welcome back" : "Create your account"}
           </h1>

@@ -118,7 +118,7 @@ export default function MoratoriumChart({ breakdown, principal, accrualType }: M
           color: "var(--text-muted)",
         }}
       >
-        ⚠️ During the moratorium, interest accrues but you make no payments — your effective debt grows from{" "}
+        During the moratorium, interest accrues but you make no payments — your effective debt grows from{" "}
         <strong style={{ color: "var(--text)" }}>{formatINR(principal)}</strong> to{" "}
         <strong style={{ color: "#dc2626" }}>{formatINR(finalBalance)}</strong> before repayment begins.
       </div>

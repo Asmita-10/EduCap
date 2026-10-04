@@ -33,7 +33,11 @@ function DeltaBadge({ a, b, lowerIsBetter = false }: { a: number; b: number; low
       {typeof a === typeof 0 && Math.abs(delta) > 1000
         ? formatINR(delta, true)
         : delta.toFixed(1)}
-      {better ? " ✓" : " ✗"}
+      {better ? (
+        <svg style={{ display: "inline", marginLeft: "3px" }} width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      ) : (
+        <svg style={{ display: "inline", marginLeft: "3px" }} width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      )}
     </span>
   );
 }
@@ -102,7 +106,9 @@ export default function ComparePage() {
   if (plans.length < 2) {
     return (
       <div style={{ padding: "80px 24px", textAlign: "center", color: "var(--text-muted)" }}>
-        <div style={{ fontSize: "3rem", marginBottom: "16px" }}>⚖️</div>
+        <div style={{ fontSize: "3rem", marginBottom: "16px", opacity: 0.3 }}>
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        </div>
         <h2 style={{ marginBottom: "8px", color: "var(--text)" }}>Compare Plans</h2>
         <p>You need at least 2 saved plans to compare. Go to the wizard to create another plan.</p>
       </div>
@@ -115,7 +121,7 @@ export default function ComparePage() {
   return (
     <div style={{ padding: "48px 0", minHeight: "calc(100vh - 80px)" }}>
       <div className="container">
-        <h1 style={{ marginBottom: "8px" }}>⚖️ Compare Plans</h1>
+        <h1 style={{ marginBottom: "8px" }}>Compare Plans</h1>
         <p style={{ color: "var(--text-muted)", marginBottom: "32px" }}>
           Select two saved plans to see side-by-side metrics with delta highlighting.
         </p>
@@ -176,8 +182,8 @@ export default function ComparePage() {
               }}
             >
               <div style={{ fontSize: "0.8rem", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Metric</div>
-              <div style={{ fontWeight: 700, textAlign: "center", color: "var(--primary-light)" }}>📋 {pA.name}</div>
-              <div style={{ fontWeight: 700, textAlign: "center", color: "#8b6aff" }}>📋 {pB.name}</div>
+              <div style={{ fontWeight: 700, textAlign: "center", color: "var(--primary-light)" }}>{pA.name}</div>
+              <div style={{ fontWeight: 700, textAlign: "center", color: "#8b6aff" }}>{pB.name}</div>
             </div>
 
             {/* Risk bands */}
@@ -198,7 +204,7 @@ export default function ComparePage() {
                 return (
                   <div key={p.id} style={{ textAlign: "center" }}>
                     {info ? (
-                      <span className={`badge ${info.bgClass}`}>{info.emoji} {info.label}</span>
+                      <span className={`badge ${info.bgClass}`}>{info.label}</span>
                     ) : "—"}
                   </div>
                 );

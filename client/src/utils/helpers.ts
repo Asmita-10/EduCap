@@ -16,21 +16,21 @@ export function getRiskBandInfo(band: "SAFE" | "MODERATE" | "HIGH_STRESS") {
       color: "#16a34a",
       bgClass: "badge-safe",
       description: "Your EMI is within a manageable range",
-      emoji: "✅",
+      emoji: "",
     },
     MODERATE: {
       label: "Moderate",
       color: "#d97706",
       bgClass: "badge-moderate",
       description: "Loan is repayable but leaves limited flexibility",
-      emoji: "⚠️",
+      emoji: "",
     },
     HIGH_STRESS: {
       label: "High Stress",
       color: "#dc2626",
       bgClass: "badge-danger",
       description: "EMI burden is dangerously high — action needed",
-      emoji: "🚨",
+      emoji: "",
     },
   };
   return map[band] || map.MODERATE;

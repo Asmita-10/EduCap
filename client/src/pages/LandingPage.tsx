@@ -5,45 +5,55 @@ import heroBg from "../assets/hero_illustration.png";
 import step1Img from "../assets/step1.jpg";
 import step2Img from "../assets/step2.jpg";
 import step3Img from "../assets/step3.jpg";
+import {
+  BarChart3,
+  Clock,
+  Target,
+  Bot,
+  TrendingUp,
+  Scale,
+  Link2,
+  Bell,
+} from "lucide-react";
 
 const features = [
   {
-    icon: "📊",
+    Icon: BarChart3,
     title: "Inflation-Aware Cost Modeling",
     desc: "Compounds tuition and living costs year-by-year using real education and general inflation rates — so you see the true cost, not today's price.",
   },
   {
-    icon: "⏳",
+    Icon: Clock,
     title: "Moratorium Trap Detector",
     desc: "Visualises exactly how much interest silently accrues during your study + grace period, revealing the true loan principal before EMI begins.",
   },
   {
-    icon: "🎯",
+    Icon: Target,
     title: "FOIR Risk Rating",
     desc: "Computes your Fixed Obligation to Income Ratio against AI-estimated realistic starting salaries. Safe · Moderate · High Stress — in plain English.",
   },
   {
-    icon: "🤖",
+    Icon: Bot,
     title: "AI Salary Forecasting",
     desc: "Powered by Google Gemini, EduCap estimates realistic post-grad salary ranges based on your degree, institution, and city.",
   },
   {
-    icon: "📈",
+    Icon: TrendingUp,
     title: "Interactive Visualisations",
     desc: "Amortization curves, moratorium growth charts, and FOIR gauges update in real time as you adjust sliders.",
   },
   {
-    icon: "⚖️",
+    Icon: Scale,
     title: "Plan A vs Plan B",
     desc: "Save and compare multiple loan scenarios side-by-side to find the combination that works for you.",
   },
   {
-    icon: "🔗",
+    Icon: Link2,
     title: "Shareable Report Links",
     desc: "Share your risk report via link with parents or co-signers to keep everyone on the same page.",
   },
   {
-    icon: "🔔",
+    Icon: Bell,
     title: "Rate Change Alerts",
     desc: "Get notified when your lender's interest rate changes so you can act early and refinance.",
   },
@@ -120,7 +130,7 @@ export default function LandingPage() {
               marginBottom: "24px",
             }}
           >
-            🚀 Student-first financial planning
+            Student-first financial planning
           </motion.div>
 
           <motion.h1 
@@ -231,7 +241,9 @@ export default function LandingPage() {
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
-            {features.map((f, i) => (
+            {features.map((f, i) => {
+              const Icon = f.Icon;
+              return (
               <motion.div
                 key={i}
                 initial={{ opacity: 0, y: 20 }}
@@ -241,11 +253,14 @@ export default function LandingPage() {
                 whileHover={{ y: -4, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
                 className="card h-full"
               >
-                <div style={{ fontSize: "2.2rem", marginBottom: "12px" }}>{f.icon}</div>
+                <div style={{ width: "44px", height: "44px", borderRadius: "12px", background: "rgba(74,157,142,0.1)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "16px" }}>
+                  <Icon style={{ width: "22px", height: "22px", color: "var(--accent)" }} />
+                </div>
                 <h3 style={{ marginBottom: "8px", fontSize: "1.1rem" }}>{f.title}</h3>
                 <p style={{ color: "var(--text-muted)", fontSize: "0.9rem", lineHeight: 1.65 }}>{f.desc}</p>
               </motion.div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>

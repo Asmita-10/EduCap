@@ -132,7 +132,7 @@ export default function WizardStep2({ onNext, onBack }: WizardStep2Props) {
             className={`badge ${liveFOIR <= 30 ? "badge-safe" : liveFOIR <= 45 ? "badge-moderate" : "badge-danger"}`}
             style={{ fontSize: "0.9rem", padding: "6px 16px" }}
           >
-            {liveFOIR <= 30 ? "✅ Safe" : liveFOIR <= 45 ? "⚠️ Moderate" : "🚨 High Stress"}
+            {liveFOIR <= 30 ? "Safe" : liveFOIR <= 45 ? "Moderate" : "High Stress"}
           </div>
         </div>
       </div>

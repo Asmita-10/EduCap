@@ -61,7 +61,7 @@ export default function PricingGrid({ currentTier }: PricingGridProps) {
       toast.dismiss(verifyToast);
       if (confirmRes.data.success) {
         sessionStorage.removeItem("pending_sub_id");
-        toast.success(`🎉 Upgraded to EduCap ${selectedTier} successfully!`);
+        toast.success(`Upgraded to EduCap ${selectedTier} successfully!`);
         startPolling();
       }
     } catch (err: any) {
@@ -73,7 +73,7 @@ export default function PricingGrid({ currentTier }: PricingGridProps) {
   const handleModalDismiss = () => {
     setModalOpen(false);
     sessionStorage.removeItem("pending_sub_id");
-    toast("Checkout cancelled", { icon: "ℹ️" });
+    toast("Checkout cancelled");
   };
 
 

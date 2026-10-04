@@ -277,7 +277,7 @@ export default function MockPaymentModal({
                     </motion.div>
                     <div className="text-center">
                       <p className="font-bold text-gray-800 text-lg">Payment Successful!</p>
-                      <p className="text-[13px] text-gray-500 mt-1">Welcome to EduCap {tier} 🎉</p>
+                      <p className="text-[13px] text-gray-500 mt-1">Welcome to EduCap {tier}!</p>
                     </div>
                   </motion.div>
                 )}

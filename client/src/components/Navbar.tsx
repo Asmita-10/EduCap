@@ -1,5 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../store";
+import { GraduationCap } from "lucide-react";
 
 export default function Navbar() {
   const { user, clearAuth, isAuthenticated } = useAuthStore();
@@ -14,7 +15,8 @@ export default function Navbar() {
     <nav className="navbar" role="navigation" aria-label="Main navigation">
       <div className="container navbar-inner">
         <Link to="/" className="navbar-logo" aria-label="EduCap home">
-          🎓 Edu<span>Cap</span>
+          <GraduationCap className="w-5 h-5" style={{ color: "var(--accent)" }} />
+          Edu<span>Cap</span>
         </Link>
 
         <div className="navbar-links">
