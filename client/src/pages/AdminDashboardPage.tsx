@@ -1,21 +1,63 @@
 import { useEffect, useState } from "react";
 import adminApi from "../services/adminApi";
 import { Link } from "react-router-dom";
-import { 
-  Users, 
-  Sparkles, 
-  UserCheck, 
-  ArrowRight, 
-  Activity, 
-  CheckCircle2, 
-  CreditCard, 
+import {
+  Users,
+  Sparkles,
+  UserCheck,
+  ArrowRight,
+  Activity,
+  CheckCircle2,
+  CreditCard,
   RefreshCw,
-  Shield,
   Server,
-  Zap,
   TrendingUp,
-  IndianRupee
+  IndianRupee,
+  Zap,
 } from "lucide-react";
+
+// ── Reusable card wrapper ───────────────────────────────────────────────────
+function Card({
+  children,
+  className = "",
+  style = {},
+}: {
+  children: React.ReactNode;
+  className?: string;
+  style?: React.CSSProperties;
+}) {
+  return (
+    <div
+      className={className}
+      style={{
+        background: "#FFFFFF",
+        border: "1px solid #E5DED3",
+        borderRadius: "20px",
+        boxShadow: "0 2px 12px rgba(43,40,35,0.06), 0 1px 3px rgba(43,40,35,0.04)",
+        ...style,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+// ── Status pill ────────────────────────────────────────────────────────────
+function StatusPill({ label }: { label: string }) {
+  return (
+    <span
+      className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold"
+      style={{
+        background: "rgba(74,157,142,0.1)",
+        color: "#2E7268",
+        border: "1px solid rgba(74,157,142,0.2)",
+      }}
+    >
+      <CheckCircle2 className="w-3 h-3" style={{ color: "#4A9D8E" }} />
+      {label}
+    </span>
+  );
+}
 
 export default function AdminDashboardPage() {
   const [metrics, setMetrics] = useState({
@@ -42,241 +84,360 @@ export default function AdminDashboardPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="flex flex-col items-center gap-3 text-gray-500">
-          <RefreshCw className="w-7 h-7 animate-spin text-[#3B8A78]" />
-          <p className="text-sm font-medium">Loading Dashboard...</p>
+      <div className="flex items-center justify-center min-h-[500px]">
+        <div className="flex flex-col items-center gap-3">
+          <RefreshCw className="w-6 h-6 animate-spin" style={{ color: "#4A9D8E" }} />
+          <p className="text-sm font-medium" style={{ color: "#6B6660" }}>
+            Loading Dashboard…
+          </p>
         </div>
       </div>
     );
   }
 
   const statCards = [
-    { 
-      label: "TOTAL USERS", 
-      value: metrics.totalUsers.toLocaleString(), 
+    {
+      label: "Total Users",
+      value: metrics.totalUsers.toLocaleString(),
       subtext: "Registered student accounts",
-      icon: Users, 
-      iconBg: "bg-[#C8EADF] text-[#2D6A5D]",
+      icon: Users,
+      accent: false,
     },
-    { 
-      label: "ACTIVE SUBSCRIPTIONS", 
-      value: metrics.activeSubscriptions.toLocaleString(), 
+    {
+      label: "Active Subscriptions",
+      value: metrics.activeSubscriptions.toLocaleString(),
       subtext: "Plus & Pro paid subscribers",
-      icon: Sparkles, 
-      iconBg: "bg-[#C8EADF] text-[#2D6A5D]",
+      icon: Sparkles,
+      accent: false,
     },
-    { 
-      label: "MONTHLY REVENUE (MRR)", 
-      value: `₹${metrics.mrr.toLocaleString()}`, 
-      subtext: "Recurring subscription revenue",
-      icon: IndianRupee, 
-      iconBg: "bg-[#111827] text-white",
+    {
+      label: "Monthly Revenue",
+      value: `₹${metrics.mrr.toLocaleString()}`,
+      subtext: "Recurring subscription MRR",
+      icon: IndianRupee,
+      accent: true, // dark badge
     },
-    { 
-      label: "FREE TIER USERS", 
-      value: metrics.freeTierUsers.toLocaleString(), 
+    {
+      label: "Free Tier Users",
+      value: metrics.freeTierUsers.toLocaleString(),
       subtext: "Standard free accounts",
-      icon: UserCheck, 
-      iconBg: "bg-[#C8EADF] text-[#2D6A5D]",
+      icon: UserCheck,
+      accent: false,
     },
   ];
 
   return (
-    <div className="w-full max-w-7xl mx-auto flex flex-col gap-6 pb-10">
-      {/* Section Title Sub-Header */}
-      <div className="flex flex-col">
-        <div>
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-xs font-semibold uppercase tracking-wider bg-gray-200/80 text-gray-700 border border-gray-300/60 shadow-2xs">
-            <Shield className="w-3.5 h-3.5 text-gray-600" />
-            ADMIN PORTAL
-          </span>
-        </div>
-        <h1 className="text-4xl font-extrabold text-[#111827] tracking-tight mt-1 font-['Outfit']">
+    <div className="px-8 py-7 max-w-[1280px] mx-auto">
+
+      {/* ── Page header ─────────────────────────────────────────────────── */}
+      <div className="mb-8">
+        <h1
+          className="text-3xl font-extrabold tracking-tight mb-1"
+          style={{ color: "#2B2823", fontFamily: "'Outfit', sans-serif" }}
+        >
           Dashboard Overview
         </h1>
-        <p className="text-sm text-gray-600 mt-1">
-          Welcome back! Here is a real-time summary of the platform's metrics and system health.
+        <p className="text-[14px]" style={{ color: "#6B6660" }}>
+          Welcome back! Here's a real-time summary of the platform's metrics and system health.
         </p>
       </div>
 
-      {/* Top KPI Metric Cards (4-Column Grid) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-2">
-        {statCards.map((card, idx) => {
+      {/* ── KPI Cards ───────────────────────────────────────────────────── */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        {statCards.map((card) => {
           const Icon = card.icon;
           return (
-            <div 
-              key={idx} 
-              className="bg-[#FAF9F6] border border-[#E2DFD8] rounded-2xl p-5 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-start"
-            >
-              <div className="mb-4">
-                <div className={`p-3 rounded-xl inline-flex items-center justify-center ${card.iconBg}`}>
-                  <Icon className="w-5 h-5" />
-                </div>
+            <Card key={card.label} style={{ padding: "20px 22px" }}>
+              {/* Icon badge */}
+              <div
+                className="w-10 h-10 rounded-2xl flex items-center justify-center mb-4"
+                style={
+                  card.accent
+                    ? { background: "#2B2823", color: "#FFFFFF" }
+                    : { background: "rgba(74,157,142,0.12)", color: "#2E7268" }
+                }
+              >
+                <Icon className="w-[18px] h-[18px]" />
               </div>
-              <div className="flex flex-col">
-                <p className="text-xs font-bold text-gray-700 tracking-wider uppercase mb-1">
-                  {card.label}
-                </p>
-                <h3 className="text-3xl font-extrabold text-[#111827] my-1 font-['Outfit'] leading-none">
-                  {card.value}
-                </h3>
-                <p className="text-xs text-gray-500 mt-1">
-                  {card.subtext}
-                </p>
+
+              {/* Metric value */}
+              <div
+                className="text-[2rem] font-extrabold leading-none mb-1"
+                style={{ color: "#2B2823", fontFamily: "'Outfit', sans-serif" }}
+              >
+                {card.value}
               </div>
-            </div>
+
+              {/* Label */}
+              <div
+                className="text-[11px] font-bold uppercase tracking-wider mb-1"
+                style={{ color: "#6B6660" }}
+              >
+                {card.label}
+              </div>
+
+              {/* Sub text */}
+              <div className="text-[12px]" style={{ color: "#A19C95" }}>
+                {card.subtext}
+              </div>
+            </Card>
           );
         })}
       </div>
 
-      {/* Quick Actions & System Status Section (2-Column Grid) */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-2 items-stretch">
-        {/* Left Card Container: Quick Actions */}
-        <div className="bg-[#FAF9F6] border border-[#E2DFD8] rounded-2xl p-6 shadow-sm flex flex-col justify-between">
-          <div>
-            <div className="flex items-center gap-2.5 mb-1">
-              <div className="w-8 h-8 rounded-lg bg-[#C8EADF] text-[#2D6A5D] flex items-center justify-center">
-                <Zap className="w-4 h-4 fill-current" />
+      {/* ── Quick Actions + System Status ───────────────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+
+        {/* Quick Actions card */}
+        <Card style={{ padding: "24px" }}>
+          {/* Card header */}
+          <div className="flex items-center gap-2.5 mb-1">
+            <div
+              className="w-8 h-8 rounded-xl flex items-center justify-center"
+              style={{ background: "rgba(74,157,142,0.12)" }}
+            >
+              <Zap className="w-4 h-4" style={{ color: "#4A9D8E" }} />
+            </div>
+            <h2
+              className="text-[17px] font-bold"
+              style={{ color: "#2B2823", fontFamily: "'Outfit', sans-serif" }}
+            >
+              Quick Actions
+            </h2>
+          </div>
+          <p className="text-[12.5px] mb-5" style={{ color: "#A19C95" }}>
+            Jump straight into common administrative tasks and reports.
+          </p>
+
+          <div className="flex flex-col gap-2.5">
+            {/* Manage Users */}
+            <Link
+              to="/admin/users"
+              className="group flex items-center justify-between p-3.5 rounded-2xl no-underline transition-all duration-200"
+              style={{
+                background: "#FAF6F0",
+                border: "1px solid #E5DED3",
+              }}
+              onMouseEnter={(e) => {
+                const el = e.currentTarget as HTMLElement;
+                el.style.borderColor = "rgba(74,157,142,0.4)";
+                el.style.background = "rgba(74,157,142,0.04)";
+                el.style.boxShadow = "0 2px 10px rgba(74,157,142,0.1)";
+              }}
+              onMouseLeave={(e) => {
+                const el = e.currentTarget as HTMLElement;
+                el.style.borderColor = "#E5DED3";
+                el.style.background = "#FAF6F0";
+                el.style.boxShadow = "none";
+              }}
+            >
+              <div className="flex items-center gap-3">
+                <div
+                  className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                  style={{ background: "#FFFFFF", border: "1px solid #E5DED3" }}
+                >
+                  <Users className="w-4 h-4" style={{ color: "#6B6660" }} />
+                </div>
+                <div>
+                  <span
+                    className="text-[13.5px] font-semibold block"
+                    style={{ color: "#2B2823" }}
+                  >
+                    Manage Users
+                  </span>
+                  <span className="text-[12px]" style={{ color: "#A19C95" }}>
+                    View, search and manage student accounts
+                  </span>
+                </div>
               </div>
-              <h2 className="text-2xl font-extrabold text-[#111827] font-['Outfit']">
-                Quick Actions
+              <ArrowRight
+                className="w-4 h-4 shrink-0 transition-transform group-hover:translate-x-0.5"
+                style={{ color: "#C8C2BB" }}
+              />
+            </Link>
+
+            {/* View Subscriptions */}
+            <Link
+              to="/admin/subscriptions"
+              className="group flex items-center justify-between p-3.5 rounded-2xl no-underline transition-all duration-200"
+              style={{
+                background: "#FAF6F0",
+                border: "1px solid #E5DED3",
+              }}
+              onMouseEnter={(e) => {
+                const el = e.currentTarget as HTMLElement;
+                el.style.borderColor = "rgba(74,157,142,0.4)";
+                el.style.background = "rgba(74,157,142,0.04)";
+                el.style.boxShadow = "0 2px 10px rgba(74,157,142,0.1)";
+              }}
+              onMouseLeave={(e) => {
+                const el = e.currentTarget as HTMLElement;
+                el.style.borderColor = "#E5DED3";
+                el.style.background = "#FAF6F0";
+                el.style.boxShadow = "none";
+              }}
+            >
+              <div className="flex items-center gap-3">
+                <div
+                  className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                  style={{ background: "#FFFFFF", border: "1px solid #E5DED3" }}
+                >
+                  <CreditCard className="w-4 h-4" style={{ color: "#6B6660" }} />
+                </div>
+                <div>
+                  <span
+                    className="text-[13.5px] font-semibold block"
+                    style={{ color: "#2B2823" }}
+                  >
+                    View Subscriptions
+                  </span>
+                  <span className="text-[12px]" style={{ color: "#A19C95" }}>
+                    Track Razorpay plans, renewals, and tiers
+                  </span>
+                </div>
+              </div>
+              <ArrowRight
+                className="w-4 h-4 shrink-0 transition-transform group-hover:translate-x-0.5"
+                style={{ color: "#C8C2BB" }}
+              />
+            </Link>
+
+            {/* Analytics — teal highlight */}
+            <Link
+              to="/admin/analytics"
+              className="group flex items-center justify-between p-3.5 rounded-2xl no-underline transition-all duration-200"
+              style={{
+                background: "rgba(74,157,142,0.08)",
+                border: "1px solid rgba(74,157,142,0.2)",
+              }}
+              onMouseEnter={(e) => {
+                const el = e.currentTarget as HTMLElement;
+                el.style.background = "rgba(74,157,142,0.13)";
+                el.style.boxShadow = "0 2px 12px rgba(74,157,142,0.15)";
+              }}
+              onMouseLeave={(e) => {
+                const el = e.currentTarget as HTMLElement;
+                el.style.background = "rgba(74,157,142,0.08)";
+                el.style.boxShadow = "none";
+              }}
+            >
+              <div className="flex items-center gap-3">
+                <div
+                  className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                  style={{ background: "#4A9D8E" }}
+                >
+                  <TrendingUp className="w-4 h-4 text-white" />
+                </div>
+                <div>
+                  <span
+                    className="text-[13.5px] font-semibold block"
+                    style={{ color: "#2B2823" }}
+                  >
+                    Go to Analytics Dashboard
+                  </span>
+                  <span className="text-[12px]" style={{ color: "#6B6660" }}>
+                    Explore growth charts, MRR and conversion
+                  </span>
+                </div>
+              </div>
+              <ArrowRight
+                className="w-4 h-4 shrink-0 transition-transform group-hover:translate-x-0.5"
+                style={{ color: "#4A9D8E" }}
+              />
+            </Link>
+          </div>
+        </Card>
+
+        {/* System Status card */}
+        <Card style={{ padding: "24px" }}>
+          {/* Card header */}
+          <div className="flex items-center justify-between mb-1">
+            <div className="flex items-center gap-2.5">
+              <div
+                className="w-8 h-8 rounded-xl flex items-center justify-center"
+                style={{ background: "rgba(74,157,142,0.12)" }}
+              >
+                <Activity className="w-4 h-4" style={{ color: "#4A9D8E" }} />
+              </div>
+              <h2
+                className="text-[17px] font-bold"
+                style={{ color: "#2B2823", fontFamily: "'Outfit', sans-serif" }}
+              >
+                System Status
               </h2>
             </div>
-            <p className="text-xs text-gray-500 mt-0.5 mb-4">
-              Jump straight into common administrative tasks and reports.
-            </p>
-            
-            <div className="flex flex-col gap-3">
-              {/* 1. Manage Users */}
-              <Link 
-                to="/admin/users" 
-                className="group flex items-center justify-between p-3.5 rounded-xl border border-[#E5E2DC] bg-white hover:border-[#3B8A78] hover:shadow-sm transition-all duration-200 no-underline"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-[#E8E6E1] text-[#111827] flex items-center justify-center shrink-0">
-                    <Users className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <span className="text-sm font-bold text-[#111827] block">Manage Users</span>
-                    <span className="text-xs text-gray-500">View, search and manage student accounts</span>
-                  </div>
-                </div>
-                <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-[#3B8A78] group-hover:translate-x-0.5 transition-all" />
-              </Link>
-
-              {/* 2. View Subscriptions */}
-              <Link 
-                to="/admin/subscriptions" 
-                className="group flex items-center justify-between p-3.5 rounded-xl border border-[#E5E2DC] bg-white hover:border-[#3B8A78] hover:shadow-sm transition-all duration-200 no-underline"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-[#E8E6E1] text-[#111827] flex items-center justify-center shrink-0">
-                    <CreditCard className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <span className="text-sm font-bold text-[#111827] block">View Subscriptions</span>
-                    <span className="text-xs text-gray-500">Track Razorpay plans, renewals, and tiers</span>
-                  </div>
-                </div>
-                <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-[#3B8A78] group-hover:translate-x-0.5 transition-all" />
-              </Link>
-
-              {/* 3. Go to Analytics Dashboard */}
-              <Link 
-                to="/admin/analytics" 
-                className="group flex items-center justify-between p-3.5 rounded-xl border border-[#BDE3D8] bg-[#E2F2EE] hover:bg-[#D5EFE8] transition-all duration-200 no-underline"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-[#BDE3D8] text-[#1E5D50] flex items-center justify-center shrink-0">
-                    <TrendingUp className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <span className="text-sm font-bold text-[#1E5D50] block">Go to Analytics Dashboard</span>
-                    <span className="text-xs text-gray-500">Explore growth charts, MRR and conversion</span>
-                  </div>
-                </div>
-                <ArrowRight className="w-4 h-4 text-[#1E5D50] group-hover:translate-x-0.5 transition-all" />
-              </Link>
-            </div>
+            <span
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold"
+              style={{
+                background: "rgba(74,157,142,0.1)",
+                color: "#2E7268",
+                border: "1px solid rgba(74,157,142,0.2)",
+              }}
+            >
+              <span
+                className="w-1.5 h-1.5 rounded-full animate-pulse"
+                style={{ background: "#4A9D8E" }}
+              />
+              All Operational
+            </span>
           </div>
-        </div>
+          <p className="text-[12.5px] mb-5" style={{ color: "#A19C95" }}>
+            Live heartbeat and service health monitoring.
+          </p>
 
-        {/* Right Card Container: System Status */}
-        <div className="bg-[#FAF9F6] border border-[#E2DFD8] rounded-2xl p-6 shadow-sm flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between mb-1">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-[#D8F0EA] text-[#1E5D50] flex items-center justify-center">
-                  <Activity className="w-4 h-4" />
+          <div className="flex flex-col gap-2.5">
+            {[
+              {
+                icon: Server,
+                name: "API Services",
+                sub: "REST endpoints & Financial Engine",
+                status: "Online",
+              },
+              {
+                icon: CreditCard,
+                name: "Razorpay Webhooks",
+                sub: "Payment verification gateway",
+                status: "Active",
+              },
+              {
+                icon: Activity,
+                name: "Database Sync",
+                sub: "Prisma ORM & MongoDB Atlas",
+                status: "Healthy",
+              },
+            ].map((service) => {
+              const Icon = service.icon;
+              return (
+                <div
+                  key={service.name}
+                  className="flex items-center justify-between p-3.5 rounded-2xl"
+                  style={{ background: "#FAF6F0", border: "1px solid #E5DED3" }}
+                >
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                      style={{ background: "#FFFFFF", border: "1px solid #E5DED3" }}
+                    >
+                      <Icon className="w-4 h-4" style={{ color: "#6B6660" }} />
+                    </div>
+                    <div>
+                      <span
+                        className="text-[13.5px] font-semibold block"
+                        style={{ color: "#2B2823" }}
+                      >
+                        {service.name}
+                      </span>
+                      <span className="text-[12px]" style={{ color: "#A19C95" }}>
+                        {service.sub}
+                      </span>
+                    </div>
+                  </div>
+                  <StatusPill label={service.status} />
                 </div>
-                <h2 className="text-2xl font-extrabold text-[#111827] font-['Outfit']">
-                  System Status
-                </h2>
-              </div>
-              <span className="bg-[#D8F0EA] text-[#1E5D50] text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1.5 border border-[#BDE3D8]">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                All Operational
-              </span>
-            </div>
-            <p className="text-xs text-gray-500 mt-0.5 mb-4">
-              Live heartbeat and service health monitoring.
-            </p>
-
-            <div className="flex flex-col gap-3">
-              {/* 1. API Services */}
-              <div className="flex items-center justify-between p-3.5 rounded-xl bg-white border border-[#E5E2DC]">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-[#E8E6E1] text-gray-600 flex items-center justify-center shrink-0">
-                    <Server className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <span className="text-sm font-bold text-[#111827] block">API Services</span>
-                    <span className="text-xs text-gray-500">REST endpoints & Financial Engine</span>
-                  </div>
-                </div>
-                <span className="bg-[#D8F0EA] text-[#1E5D50] text-xs font-semibold px-3 py-1 rounded-full flex items-center gap-1.5 border border-[#BDE3D8]">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-[#1E5D50]" />
-                  Online
-                </span>
-              </div>
-
-              {/* 2. Razorpay Webhooks */}
-              <div className="flex items-center justify-between p-3.5 rounded-xl bg-white border border-[#E5E2DC]">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-[#E8E6E1] text-gray-600 flex items-center justify-center shrink-0">
-                    <CreditCard className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <span className="text-sm font-bold text-[#111827] block">Razorpay Webhooks</span>
-                    <span className="text-xs text-gray-500">Payment verification gateway</span>
-                  </div>
-                </div>
-                <span className="bg-[#D8F0EA] text-[#1E5D50] text-xs font-semibold px-3 py-1 rounded-full flex items-center gap-1.5 border border-[#BDE3D8]">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-[#1E5D50]" />
-                  Active
-                </span>
-              </div>
-
-              {/* 3. Database Sync */}
-              <div className="flex items-center justify-between p-3.5 rounded-xl bg-white border border-[#E5E2DC]">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-[#E8E6E1] text-gray-600 flex items-center justify-center shrink-0">
-                    <Activity className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <span className="text-sm font-bold text-[#111827] block">Database Sync</span>
-                    <span className="text-xs text-gray-500">Prisma ORM & MongoDB Atlas</span>
-                  </div>
-                </div>
-                <span className="bg-[#D8F0EA] text-[#1E5D50] text-xs font-semibold px-3 py-1 rounded-full flex items-center gap-1.5 border border-[#BDE3D8]">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-[#1E5D50]" />
-                  Healthy
-                </span>
-              </div>
-            </div>
+              );
+            })}
           </div>
-        </div>
+        </Card>
       </div>
     </div>
   );

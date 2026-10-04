@@ -1,5 +1,6 @@
 import { useLocation } from "react-router-dom";
 import { useAdminStore } from "../store/useAdminStore";
+import { Shield } from "lucide-react";
 
 export default function AdminHeader() {
   const { admin } = useAdminStore();
@@ -14,16 +15,64 @@ export default function AdminHeader() {
   };
 
   return (
-    <header className="h-20 bg-white border-b border-[#E5E2DC] flex items-center justify-between px-8 shrink-0 z-10">
-      <h1 className="text-3xl font-extrabold text-[#111827] font-['Outfit'] tracking-tight">
-        {getPageTitle()}
-      </h1>
+    <header
+      className="h-[68px] shrink-0 flex items-center justify-between px-8 z-10"
+      style={{
+        background: "#FAF6F0",
+        borderBottom: "1px solid #E5DED3",
+      }}
+    >
+      {/* Left: page title */}
       <div className="flex items-center gap-3">
-        <div className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-[#FAF9F6] border border-[#E5E2DC] text-xs font-semibold text-[#111827]">
-          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-          <span>Welcome, {admin?.name || "Admin"}</span>
+        <div
+          className="flex items-center gap-1.5 px-2.5 py-1 rounded-md"
+          style={{ background: "rgba(74,157,142,0.08)", border: "1px solid rgba(74,157,142,0.15)" }}
+        >
+          <Shield className="w-3 h-3" style={{ color: "#4A9D8E" }} />
+          <span
+            className="text-[10.5px] font-bold uppercase tracking-widest"
+            style={{ color: "#4A9D8E" }}
+          >
+            Admin Portal
+          </span>
         </div>
-        <div className="w-9 h-9 rounded-full bg-[#1E232A] text-white flex items-center justify-center font-bold text-sm shadow-sm border border-[#E5E2DC]">
+        <span style={{ color: "#D5CEC5", fontSize: "14px" }}>/</span>
+        <h1
+          className="text-[17px] font-bold"
+          style={{ color: "#2B2823", fontFamily: "'Outfit', sans-serif" }}
+        >
+          {getPageTitle()}
+        </h1>
+      </div>
+
+      {/* Right: welcome pill + avatar */}
+      <div className="flex items-center gap-3">
+        <div
+          className="flex items-center gap-2 px-3.5 py-2 rounded-full"
+          style={{
+            background: "#FFFFFF",
+            border: "1px solid #E5DED3",
+            boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+          }}
+        >
+          <span
+            className="w-2 h-2 rounded-full animate-pulse"
+            style={{ background: "#4A9D8E" }}
+          />
+          <span
+            className="text-[13px] font-semibold"
+            style={{ color: "#2B2823" }}
+          >
+            Welcome, {admin?.name || "Admin"}
+          </span>
+        </div>
+        <div
+          className="w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm text-white select-none"
+          style={{
+            background: "linear-gradient(135deg, #4A9D8E 0%, #3a8070 100%)",
+            boxShadow: "0 2px 8px rgba(74,157,142,0.35)",
+          }}
+        >
           A
         </div>
       </div>
