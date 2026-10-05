@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import fs from "fs";
-import path from "path";
+import knowledgeBase from "../../data/knowledgeBase.json";
 
 interface KnowledgeChunk {
   id: string;
@@ -9,109 +8,40 @@ interface KnowledgeChunk {
   content: string;
 }
 
-interface IndexedChunk extends KnowledgeChunk {
-  tokens: string[];
-}
+// ── Explicit In-Memory Keyword Matcher ─────────────────────────────────────
+function getRelevantContext(query: string): string {
+  const normalizedQuery = query.toLowerCase().replace(/[^a-z0-9\s]/g, "");
+  const queryTokens = normalizedQuery.split(/\s+/).filter((t) => t.length > 2);
 
-let indexedKnowledgeBase: IndexedChunk[] = [];
-
-// Common stop words to exclude from keyword extraction
-const STOP_WORDS = new Set([
-  "what", "is", "a", "an", "the", "do", "does", "did", "i", "you", "need",
-  "how", "works", "work", "can", "should", "of", "to", "for", "in", "on",
-  "with", "about", "tell", "me", "what's", "whats", "there", "are", "is",
-]);
-
-// ── Normalize and Tokenize Input Queries ──────────────────────────────────
-function normalizeAndTokenize(text: string): { normalized: string; tokens: string[]; keywords: string[] } {
-  const normalized = text.toLowerCase().trim();
-  const rawTokens = normalized
-    .replace(/[^a-z0-9\s]/g, "")
-    .split(/\s+/)
-    .filter((w) => w.length > 1);
-
-  const keywords = rawTokens.filter((w) => !STOP_WORDS.has(w) && w.length > 2);
-
-  return {
-    normalized,
-    tokens: rawTokens,
-    keywords: keywords.length > 0 ? keywords : rawTokens,
-  };
-}
-
-// ── Vector / Similarity Match (Pass 1) ───────────────────────────────────
-function computeSimilarityScore(queryKeywords: string[], chunk: IndexedChunk): number {
-  if (queryKeywords.length === 0) return 0;
-  let matches = 0;
-  const chunkText = (chunk.title + " " + chunk.content).toLowerCase();
-
-  for (const keyword of queryKeywords) {
-    if (chunkText.includes(keyword)) {
-      matches += 1;
-    }
-  }
-
-  // Exact phrase or title match boost
-  const rawQuery = queryKeywords.join(" ");
-  if (chunkText.includes(rawQuery)) {
-    matches += 2;
-  }
-
-  return matches / queryKeywords.length;
-}
-
-// ── Keyword Fallback Search (Pass 2) ──────────────────────────────────────
-function performKeywordFallback(queryKeywords: string[]): IndexedChunk[] {
-  if (queryKeywords.length === 0) return [];
-
-  const matched: { chunk: IndexedChunk; score: number }[] = [];
-
-  for (const chunk of indexedKnowledgeBase) {
+  // Score each chunk based on token matches in title and content
+  const scoredChunks = (knowledgeBase as KnowledgeChunk[]).map((chunk) => {
+    let score = 0;
     const titleLower = chunk.title.toLowerCase();
     const contentLower = chunk.content.toLowerCase();
-    let score = 0;
 
-    for (const kw of queryKeywords) {
-      if (titleLower.includes(kw)) score += 3;
-      else if (contentLower.includes(kw)) score += 1;
-    }
+    queryTokens.forEach((token) => {
+      if (titleLower.includes(token)) score += 3; // Heavy weight for title match
+      if (contentLower.includes(token)) score += 1; // Weight for content match
+    });
 
-    if (score > 0) {
-      matched.push({ chunk, score });
-    }
+    return { ...chunk, score };
+  });
+
+  // Sort by highest score
+  scoredChunks.sort((a, b) => b.score - a.score);
+
+  // If top chunk has score > 0, return top 2-3 matched chunks
+  const topMatches = scoredChunks.filter((c) => c.score > 0).slice(0, 3);
+
+  if (topMatches.length === 0) {
+    // Fallback: If no direct token match, pass entire knowledgeBase (under 1KB total!)
+    return (knowledgeBase as KnowledgeChunk[])
+      .map((c) => `${c.title}: ${c.content}`)
+      .join("\n\n");
   }
 
-  return matched
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 3)
-    .map((m) => m.chunk);
+  return topMatches.map((c) => `${c.title}: ${c.content}`).join("\n\n");
 }
-
-// ── Initialize In-Memory Vector Index ──────────────────────────────────────
-export function initVectorIndex() {
-  try {
-    const filePath = path.join(__dirname, "../../data/knowledgeBase.json");
-    if (!fs.existsSync(filePath)) {
-      console.warn("[ragChat] knowledgeBase.json not found at", filePath);
-      return;
-    }
-
-    const rawData = fs.readFileSync(filePath, "utf-8");
-    const chunks: KnowledgeChunk[] = JSON.parse(rawData);
-
-    indexedKnowledgeBase = chunks.map((chunk) => ({
-      ...chunk,
-      tokens: normalizeAndTokenize(chunk.title + " " + chunk.content).tokens,
-    }));
-
-    console.log(`[ragChat] Successfully indexed ${indexedKnowledgeBase.length} knowledge chunks in memory.`);
-  } catch (err) {
-    console.error("[ragChat] Failed to initialize knowledge base index:", err);
-  }
-}
-
-// Auto-run indexing on load
-initVectorIndex();
 
 // ── POST /api/chat Controller ──────────────────────────────────────────────
 export async function chatHandler(req: Request, res: Response) {
@@ -121,59 +51,24 @@ export async function chatHandler(req: Request, res: Response) {
       return res.status(400).json({ error: "Message string is required." });
     }
 
-    const { normalized, keywords } = normalizeAndTokenize(message);
-
-    // Pass 1: Vector / Similarity Matching (Threshold: 0.35 - 0.45)
-    const SIMILARITY_THRESHOLD = 0.35;
-    const scoredChunks = indexedKnowledgeBase
-      .map((chunk) => ({
-        chunk,
-        score: computeSimilarityScore(keywords, chunk),
-      }))
-      .sort((a, b) => b.score - a.score);
-
-    let topChunks = scoredChunks
-      .filter((item) => item.score >= SIMILARITY_THRESHOLD)
-      .slice(0, 3)
-      .map((item) => item.chunk);
-
-    // Pass 2: Keyword Fallback Search if Pass 1 yielded 0 results
-    if (topChunks.length === 0) {
-      topChunks = performKeywordFallback(keywords);
-    }
-
-    // Unrelated query check: If both passes return 0 results
-    if (topChunks.length === 0) {
-      return res.json({
-        reply: "I don't have that information in my guide.",
-        retrieved: [],
-      });
-    }
-
-    const retrievedContext = topChunks
-      .map((c) => `[${c.title}]: ${c.content}`)
-      .join("\n\n");
-
+    const context = getRelevantContext(message);
     const apiKey = process.env.GEMINI_API_KEY;
 
     // Fallback if no Gemini API key configured
     if (!apiKey) {
-      const bestMatch = topChunks[0];
+      const firstLine = context.split("\n\n")[0] || "No context available.";
       return res.json({
-        reply: `${bestMatch.content} (Source: ${bestMatch.title})`,
-        retrieved: topChunks.map((c) => c.title),
+        reply: firstLine,
+        contextUsed: true,
       });
     }
 
-    // Refined System Prompt & Context
-    const prompt = `You are EduCap's Financial Assistant. Use the provided context from EduCap's guide to answer the user's question accurately and concisely (under 3-4 sentences).
+    const systemPrompt = `You are EduCap's AI Assistant. Answer the user's question concisely (2-3 sentences max) using ONLY the context provided below.
 
 Context:
-${retrievedContext}
+${context}
 
-User Question: ${normalized}
-
-Rule: If the user's question relates to student loans, interest, moratorium, FOIR, collateral, or EduCap features, answer using the context. Only say "I don't have that information in my guide" if the query is completely unrelated to financial planning or education loans.`;
+User Question: ${message}`;
 
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({
@@ -185,7 +80,7 @@ Rule: If the user's question relates to student loans, interest, moratorium, FOI
     });
 
     const result = await Promise.race([
-      model.generateContent(prompt),
+      model.generateContent(systemPrompt),
       new Promise<never>((_, reject) =>
         setTimeout(() => reject(new Error("LLM_TIMEOUT")), 8000)
       ),
@@ -195,13 +90,13 @@ Rule: If the user's question relates to student loans, interest, moratorium, FOI
 
     return res.json({
       reply: replyText || "I don't have that information in my guide.",
-      retrieved: topChunks.map((c) => c.title),
+      contextUsed: true,
     });
   } catch (err) {
     console.error("[ragChat] Chat controller error:", (err as Error).message);
     return res.json({
       reply: "I don't have that information in my guide.",
-      retrieved: [],
+      contextUsed: false,
     });
   }
 }
