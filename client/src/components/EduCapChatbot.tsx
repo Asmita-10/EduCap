@@ -17,10 +17,12 @@ export default function EduCapChatbot() {
     },
   ]);
   const [loading, setLoading] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
+    }
   };
 
   useEffect(() => {
@@ -56,13 +58,15 @@ export default function EduCapChatbot() {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 font-sans select-none">
+    <div className="fixed bottom-6 right-6 z-50 font-sans select-none box-border">
       {/* Expanded Chat Window */}
       {isOpen && (
-        <div className="mb-3 w-80 sm:w-96 bg-[#FAF9F6] border border-[#E2DFD8] rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-fadeInUp">
-          
-          {/* ── Modernized Compact Header ────────────────────────────── */}
-          <div className="bg-[#1E5D50] text-white px-4 py-2.5 flex items-center justify-between shrink-0">
+        <div
+          className="mb-3 w-80 sm:w-96 bg-[#FAF9F6] border border-[#E2DFD8] rounded-2xl shadow-2xl flex flex-col overflow-hidden box-border"
+          style={{ overflowX: "hidden" }}
+        >
+          {/* ── Header ────────────────────────────────────────── */}
+          <div className="bg-[#1E5D50] text-white px-4 py-2.5 flex items-center justify-between shrink-0 box-border">
             <div className="flex items-center gap-2.5">
               <div className="w-7.5 h-7.5 rounded-full bg-white/10 flex items-center justify-center shrink-0">
                 <Bot className="w-4 h-4 text-white" />
@@ -85,21 +89,35 @@ export default function EduCapChatbot() {
             </button>
           </div>
 
-          {/* ── Chat Messages Body ──────────────────────────────────── */}
-          <div className="p-4 flex-1 h-80 overflow-y-auto space-y-3 bg-[#FAF9F6] select-text">
+          {/* ── Chat Messages Scroll Body ───────────────────────── */}
+          <div
+            ref={scrollContainerRef}
+            className="p-4 flex-1 h-80 bg-[#FAF9F6] select-text space-y-3 box-border"
+            style={{
+              overflowY: "auto",
+              overflowX: "hidden",
+              scrollbarGutter: "stable",
+            }}
+          >
             {messages.map((msg, index) => (
               <div
                 key={index}
-                className={`flex ${
-                  msg.sender === "user" ? "justify-end" : "justify-start"
-                }`}
+                className="w-full flex box-border"
+                style={{
+                  justifyContent: msg.sender === "user" ? "flex-end" : "flex-start",
+                }}
               >
                 <div
-                  className={`max-w-[85%] px-3.5 py-2.5 text-xs leading-relaxed break-words shadow-sm ${
+                  className={`px-3.5 py-2.5 text-xs leading-relaxed shadow-sm box-border ${
                     msg.sender === "user"
                       ? "bg-[#1E5D50] text-white rounded-t-2xl rounded-bl-2xl rounded-br-none"
                       : "bg-white text-[#111827] border border-[#E2DFD8] rounded-t-2xl rounded-br-2xl rounded-bl-none"
                   }`}
+                  style={{
+                    maxWidth: "80%",
+                    wordBreak: "break-word",
+                    overflowWrap: "anywhere",
+                  }}
                 >
                   {msg.text}
                 </div>
@@ -107,25 +125,31 @@ export default function EduCapChatbot() {
             ))}
 
             {loading && (
-              <div className="flex justify-start">
-                <div className="bg-white border border-[#E2DFD8] text-[#6B7280] rounded-t-2xl rounded-br-2xl rounded-bl-none px-3.5 py-2.5 text-xs flex items-center gap-2 shadow-sm">
-                  <Loader2 className="w-3.5 h-3.5 animate-spin text-[#1E5D50]" />
+              <div className="w-full flex justify-start box-border">
+                <div
+                  className="bg-white border border-[#E2DFD8] text-[#6B7280] rounded-t-2xl rounded-br-2xl rounded-bl-none px-3.5 py-2.5 text-xs flex items-center gap-2 shadow-sm box-border"
+                  style={{
+                    maxWidth: "80%",
+                    wordBreak: "break-word",
+                    overflowWrap: "anywhere",
+                  }}
+                >
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-[#1E5D50] shrink-0" />
                   <span>Searching guide...</span>
                 </div>
               </div>
             )}
-            <div ref={messagesEndRef} />
           </div>
 
-          {/* ── Detached Input Pill Footer Wrapper ───────────────────── */}
-          <div className="p-3 bg-[#FAF9F6] border-t border-[#E2DFD8] shrink-0">
-            <form onSubmit={handleSend} className="relative flex items-center">
+          {/* ── Input Pill Footer Wrapper ───────────────────── */}
+          <div className="p-3 bg-[#FAF9F6] border-t border-[#E2DFD8] shrink-0 box-border">
+            <form onSubmit={handleSend} className="relative flex items-center w-full box-border">
               <input
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Ask about loans, FOIR, moratorium..."
-                className="w-full pl-3.5 pr-10 py-2.5 bg-white border border-[#E2DFD8] rounded-xl text-xs text-[#111827] placeholder:text-[#9CA3AF] focus:outline-none focus:border-[#1E5D50] focus:ring-2 focus:ring-[#1E5D50]/15 transition-all shadow-sm"
+                className="w-full pl-3.5 pr-10 py-2.5 bg-white border border-[#E2DFD8] rounded-xl text-xs text-[#111827] placeholder:text-[#9CA3AF] focus:outline-none focus:border-[#1E5D50] focus:ring-2 focus:ring-[#1E5D50]/15 transition-all shadow-sm box-border"
               />
               <button
                 type="submit"
@@ -137,7 +161,6 @@ export default function EduCapChatbot() {
               </button>
             </form>
           </div>
-
         </div>
       )}
 
