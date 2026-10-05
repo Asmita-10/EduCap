@@ -59,45 +59,97 @@ export default function FinancialTermsPage() {
   );
 
   return (
-    <div className="min-h-screen bg-[#F2F0ED] font-sans">
-      <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="min-h-screen bg-[#F2F0ED] font-sans overflow-x-hidden">
+      {/* Centered Main Container */}
+      <div
+        className="w-full box-border"
+        style={{
+          maxWidth: "1100px",
+          margin: "0 auto",
+          padding: "40px 24px",
+        }}
+      >
         {/* Header Section */}
-        <div className="mb-2">
+        <div>
           <div className="flex items-center gap-2 mb-2 text-[#1E5D50]">
             <BookOpen className="w-5 h-5" />
             <span className="text-xs font-bold uppercase tracking-wider">
               Glossary & Guide
             </span>
           </div>
-          <h1 className="text-3xl font-extrabold text-[#111827] tracking-tight">
+
+          <h1
+            className="text-3xl sm:text-4xl font-extrabold text-[#111827] tracking-tight"
+            style={{ marginBottom: "8px" }}
+          >
             Financial Terms Explained
           </h1>
-          <p className="text-sm text-[#6B7280] mt-1">
+
+          <p
+            className="text-sm sm:text-base leading-relaxed"
+            style={{ marginBottom: "28px", color: "#555555" }}
+          >
             A quick, simplified guide to understanding the core education loan and financial metrics used across EduCap.
           </p>
 
-          {/* Real-time Search Input */}
-          <div className="relative w-full max-w-md my-6">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B7280]" />
+          {/* Search Input Bar */}
+          <div
+            className="relative my-6 box-border"
+            style={{
+              width: "100%",
+              maxWidth: "500px",
+            }}
+          >
+            <Search
+              className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
+              style={{ color: "#6B7280" }}
+            />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search terms or keywords (e.g., FOIR, Moratorium)..."
-              className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#E2DFD8] rounded-xl text-sm text-[#111827] placeholder:text-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#1E5D50]/20 focus:border-[#1E5D50] transition-all shadow-sm"
+              className="w-full bg-white text-[#111827] placeholder:text-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#1E5D50]/20 focus:border-[#1E5D50] transition-all shadow-sm box-border"
+              style={{
+                width: "100%",
+                padding: "12px 16px 12px 42px",
+                borderRadius: "12px",
+                border: "1.5px solid #E0E0E0",
+                fontSize: "0.95rem",
+              }}
             />
           </div>
         </div>
 
-        {/* Full-Width Vertical Card Stack */}
+        {/* 2-Column Dynamic Grid Layout */}
         {filteredTerms.length > 0 ? (
-          <div className="flex flex-col gap-4 w-full">
+          <div
+            className="w-full box-border"
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 480px), 1fr))",
+              gap: "20px",
+            }}
+          >
             {filteredTerms.map((item) => (
               <div
                 key={item.term}
-                className="w-full bg-[#FAF9F6] border border-[#E2DFD8] rounded-2xl p-5 shadow-sm hover:border-[#BDE3D8] hover:shadow-md transition-all duration-200"
+                className="bg-[#FAF9F6] border border-[#E2DFD8] rounded-2xl transition-all duration-200 group box-border hover:border-[#1E5D50]/40"
+                style={{
+                  padding: "20px 24px",
+                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.04)",
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLElement).style.boxShadow = "0 8px 24px rgba(0, 0, 0, 0.08)";
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLElement).style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.04)";
+                }}
               >
-                <h3 className="text-lg font-extrabold text-[#111827] mb-2 tracking-tight">
+                <h3
+                  className="text-lg text-[#111827] mb-2 tracking-tight group-hover:text-[#1E5D50] transition-colors"
+                  style={{ fontWeight: 600 }}
+                >
                   {item.term}
                 </h3>
                 <p className="text-sm text-[#4B5563] leading-relaxed">
@@ -108,7 +160,7 @@ export default function FinancialTermsPage() {
             ))}
           </div>
         ) : (
-          <div className="w-full bg-[#FAF9F6] border border-[#E2DFD8] rounded-2xl p-8 text-center text-[#6B7280] mt-4">
+          <div className="w-full bg-[#FAF9F6] border border-[#E2DFD8] rounded-2xl p-8 text-center text-[#6B7280] mt-4 shadow-sm">
             <HelpCircle className="w-8 h-8 mx-auto mb-2 text-[#9CA3AF]" />
             <p className="text-base font-semibold text-[#111827]">
               No financial terms match your search.
