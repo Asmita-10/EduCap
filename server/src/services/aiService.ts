@@ -12,6 +12,7 @@ export interface AIRiskReport {
   summary: string;
   mitigationSuggestions: string[];
   isAIGenerated: boolean;
+  provider?: "gemini" | "openai" | "rule-based";
 }
 
 // Rule-based salary fallback table (INR/month) keyed by degree category
@@ -61,25 +62,15 @@ function buildRuleBasedMitigation(foirPct: number, riskBand: string): string[] {
   return suggestions;
 }
 
-export async function generateAIRiskReport(params: {
+function buildPromptText(params: {
   degree: string;
   institution: string;
   city: string;
   foirPercent: number;
   riskBand: string;
   emi: number;
-}): Promise<AIRiskReport> {
-  const apiKey = process.env.GEMINI_API_KEY;
-
-  if (!apiKey) {
-    return buildFallbackReport(params);
-  }
-
-  try {
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
-    const prompt = `You are a financial advisor specializing in student education loans in India.
+}): string {
+  return `You are a financial advisor specializing in student education loans in India.
     
 A student is planning to pursue: ${params.degree} at ${params.institution}, ${params.city}.
 
@@ -101,16 +92,88 @@ Please provide a JSON response with EXACTLY this structure (no markdown, raw JSO
 }
 
 Base salary estimates on realistic Indian job market data for fresh graduates from the given institution/city. Be specific and practical. Keep suggestions actionable and targeted to this student's situation.`;
+}
 
-    const result = await Promise.race([
-      model.generateContent(prompt),
-      new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error("AI_TIMEOUT")), 15000)
-      ),
-    ]);
+// ── 1. Primary: Google Gemini API ──────────────────────────────────────────
+async function fetchFromGemini(params: {
+  degree: string;
+  institution: string;
+  city: string;
+  foirPercent: number;
+  riskBand: string;
+  emi: number;
+}): Promise<AIRiskReport> {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) throw new Error("GEMINI_API_KEY_MISSING");
 
-    const text = (result as Awaited<ReturnType<typeof model.generateContent>>)
-      .response.text()
+  const genAI = new GoogleGenerativeAI(apiKey);
+  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  const prompt = buildPromptText(params);
+
+  const result = await Promise.race([
+    model.generateContent(prompt),
+    new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error("GEMINI_TIMEOUT")), 10000)
+    ),
+  ]);
+
+  const text = (result as Awaited<ReturnType<typeof model.generateContent>>)
+    .response.text()
+    .replace(/```json\n?/g, "")
+    .replace(/```\n?/g, "")
+    .trim();
+
+  const parsed = JSON.parse(text);
+
+  return {
+    salaryForecast: parsed.salaryForecast,
+    summary: parsed.summary,
+    mitigationSuggestions: parsed.mitigationSuggestions,
+    isAIGenerated: true,
+    provider: "gemini",
+  };
+}
+
+// ── 2. Fallback: OpenAI API ─────────────────────────────────────────────────
+async function fetchFromOpenAI(params: {
+  degree: string;
+  institution: string;
+  city: string;
+  foirPercent: number;
+  riskBand: string;
+  emi: number;
+}): Promise<AIRiskReport> {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) throw new Error("OPENAI_API_KEY_MISSING");
+
+  const prompt = buildPromptText(params);
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+  try {
+    const res = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: "gpt-3.5-turbo",
+        messages: [{ role: "user", content: prompt }],
+        temperature: 0.7,
+      }),
+      signal: controller.signal,
+    });
+
+    if (!res.ok) {
+      throw new Error(`OPENAI_HTTP_ERROR_${res.status}`);
+    }
+
+    const data = (await res.json()) as any;
+    const rawContent = data?.choices?.[0]?.message?.content || "";
+
+    const text = rawContent
       .replace(/```json\n?/g, "")
       .replace(/```\n?/g, "")
       .trim();
@@ -122,13 +185,48 @@ Base salary estimates on realistic Indian job market data for fresh graduates fr
       summary: parsed.summary,
       mitigationSuggestions: parsed.mitigationSuggestions,
       isAIGenerated: true,
+      provider: "openai",
     };
-  } catch (err) {
-    console.warn("[aiService] AI generation failed, using fallback:", (err as Error).message);
-    return buildFallbackReport(params);
+  } finally {
+    clearTimeout(timeoutId);
   }
 }
 
+// ── 3. Main Entry: Multi-tiered Resilient Diagnostic Pipeline ─────────────
+export async function generateAIRiskReport(params: {
+  degree: string;
+  institution: string;
+  city: string;
+  foirPercent: number;
+  riskBand: string;
+  emi: number;
+}): Promise<AIRiskReport> {
+  // Try Primary: Google Gemini
+  try {
+    return await fetchFromGemini(params);
+  } catch (geminiErr) {
+    console.warn(
+      "[aiService] Gemini primary failed or timed out:",
+      (geminiErr as Error).message
+    );
+  }
+
+  // Try Fallback: OpenAI
+  try {
+    return await fetchFromOpenAI(params);
+  } catch (openAiErr) {
+    console.warn(
+      "[aiService] OpenAI fallback failed or missing key:",
+      (openAiErr as Error).message
+    );
+  }
+
+  // Safe Local Fallback: Rule-Based Engine
+  console.warn("[aiService] Using safe rule-based local fallback");
+  return buildFallbackReport(params);
+}
+
+// ── 4. Safe Local Fallback ─────────────────────────────────────────────────
 function buildFallbackReport(params: {
   degree: string;
   institution: string;
@@ -151,5 +249,6 @@ function buildFallbackReport(params: {
     summary: summaryMap[params.riskBand] || summaryMap["MODERATE"],
     mitigationSuggestions: buildRuleBasedMitigation(params.foirPercent, params.riskBand),
     isAIGenerated: false,
+    provider: "rule-based",
   };
 }
