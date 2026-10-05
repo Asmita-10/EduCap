@@ -1,0 +1,42 @@
+[
+  {
+    "id": "calc_moratorium_01",
+    "title": "Moratorium Period Interest Accrual",
+    "content": "During the moratorium period (study duration plus grace period), full EMIs are not required, but simple or compound interest continues to accrue on the principal loan amount. This accrued interest is added to the principal (capitalized) before the official repayment tenure begins, increasing the total effective loan balance."
+  },
+  {
+    "id": "calc_foir_02",
+    "title": "Fixed Obligation to Income Ratio (FOIR)",
+    "content": "FOIR measures the proportion of monthly net salary used to pay fixed debts including loan EMIs. Safe FOIR is 30% or less. Moderate FOIR is 30% to 45%. High Stress FOIR is above 45%, indicating severe financial stress and high risk of default."
+  },
+  {
+    "id": "calc_amortization_03",
+    "title": "Amortization Schedule and Repayment Split",
+    "content": "An amortization schedule details every monthly EMI payment over the loan tenure, showing the split between interest paid and principal paid down. Early EMI payments consist mostly of interest, while later payments pay down more principal."
+  },
+  {
+    "id": "rates_floating_fixed_04",
+    "title": "Floating vs Fixed Interest Rates",
+    "content": "Fixed interest rates remain constant throughout the loan tenure. Floating interest rates fluctuate based on RBI benchmark rate changes, affecting monthly EMI amounts or overall loan tenure."
+  },
+  {
+    "id": "rates_subsidized_05",
+    "title": "Subsidized vs Unsubsidized Loans",
+    "content": "On subsidized loans (like CSIS government schemes for eligible students), the government pays the interest accrued during the moratorium period. On unsubsidized loans, the borrower is responsible for paying or capitalizing all moratorium interest."
+  },
+  {
+    "id": "rules_prepayment_06",
+    "title": "Prepayment Penalty and Foreclosure Rules",
+    "content": "Under RBI guidelines, banks cannot charge prepayment penalties or foreclosure charges on floating rate education loans taken by individual borrowers. Fixed rate loans or non-individual loans may attract prepayment charges."
+  },
+  {
+    "id": "fees_margin_07",
+    "title": "Margin Money and Collateral Requirements",
+    "content": "Margin money is the percentage of total education expense that the student must self-fund. In India, education loans up to Rs 4 Lakhs generally require 0% margin money. Studies in India require around 5% margin, while study abroad requires around 15% margin money above Rs 4 Lakhs. Collateral (property or liquid security) is typically mandatory for loans above Rs 7.5 Lakhs."
+  },
+  {
+    "id": "educap_overview_08",
+    "title": "EduCap Platform Calculator and Features",
+    "content": "EduCap is a student loan risk planning platform. It calculates inflation-adjusted tuition and living costs, detects moratorium interest traps, computes FOIR risk ratings using AI salary forecasts, allows side-by-side plan comparisons, and provides downloadable PDF reports."
+  }
+]

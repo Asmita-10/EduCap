@@ -79,12 +79,14 @@ async function startServer() {
   const { default: calculateRoutes } = await import("./routes/calculate");
   const { default: exportRoutes } = await import("./routes/export");
   const { default: adminRoutes } = await import("./routes/admin");
+  const { chatHandler } = await import("./controllers/chatController");
   app.use("/api/auth", authRoutes);
   app.use("/api/subscriptions", subscriptionsRoutes);
   app.use("/api/plans", plansRoutes);
   app.use("/api/calculate", calculateRoutes);
   app.use("/api/plans", exportRoutes); // /api/plans/:id/export
   app.use("/api/admin", adminRoutes);
+  app.post("/api/chat", chatHandler);
 
   // 404 handler
   app.use((_req, res: express.Response) => {

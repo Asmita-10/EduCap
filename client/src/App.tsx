@@ -10,6 +10,7 @@ import ComparePage from "./pages/ComparePage";
 import TermsPage from "./pages/TermsPage";
 import PrivacyPage from "./pages/PrivacyPage";
 import FinancialTermsPage from "./pages/FinancialTermsPage";
+import EduCapChatbot from "./components/EduCapChatbot";
 import { useAuthStore } from "./store";
 import AdminLayout from "./components/AdminLayout";
 import AdminLoginPage from "./pages/AdminLoginPage";
@@ -79,6 +80,7 @@ function Layout() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
+      {!isAdminRoute && <EduCapChatbot />}
     </>
   );
 }
