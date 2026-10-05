@@ -9,7 +9,7 @@ interface KnowledgeChunk {
 }
 
 // ── Explicit In-Memory Keyword Matcher ─────────────────────────────────────
-function getRelevantContext(query: string): string {
+function getRelevantContext(query: string): { context: string; topMatch?: KnowledgeChunk } {
   const normalizedQuery = query.toLowerCase().replace(/[^a-z0-9\s]/g, "");
   const queryTokens = normalizedQuery.split(/\s+/).filter((t) => t.length > 2);
 
@@ -35,12 +35,14 @@ function getRelevantContext(query: string): string {
 
   if (topMatches.length === 0) {
     // Fallback: If no direct token match, pass entire knowledgeBase (under 1KB total!)
-    return (knowledgeBase as KnowledgeChunk[])
+    const allContext = (knowledgeBase as KnowledgeChunk[])
       .map((c) => `${c.title}: ${c.content}`)
       .join("\n\n");
+    return { context: allContext, topMatch: (knowledgeBase as KnowledgeChunk[])[0] };
   }
 
-  return topMatches.map((c) => `${c.title}: ${c.content}`).join("\n\n");
+  const context = topMatches.map((c) => `${c.title}: ${c.content}`).join("\n\n");
+  return { context, topMatch: topMatches[0] };
 }
 
 // ── POST /api/chat Controller ──────────────────────────────────────────────
@@ -51,19 +53,22 @@ export async function chatHandler(req: Request, res: Response) {
       return res.status(400).json({ error: "Message string is required." });
     }
 
-    const context = getRelevantContext(message);
+    const { context, topMatch } = getRelevantContext(message);
     const apiKey = process.env.GEMINI_API_KEY;
 
-    // Fallback if no Gemini API key configured
+    // Direct fallback if GEMINI_API_KEY is not configured on production/Render
     if (!apiKey) {
-      const firstLine = context.split("\n\n")[0] || "No context available.";
+      console.warn("[ragChat] GEMINI_API_KEY is missing, returning rule-based context match.");
+      const fallbackReply = topMatch
+        ? `${topMatch.content}`
+        : "I don't have that information in my guide.";
       return res.json({
-        reply: firstLine,
+        reply: fallbackReply,
         contextUsed: true,
       });
     }
 
-    const systemPrompt = `You are EduCap's AI Assistant. Answer the user's question concisely (2-3 sentences max) using ONLY the context provided below.
+    const systemPrompt = `You are EduCap's AI Assistant. Answer the user's question concisely in 2-3 sentences based on the provided context below.
 
 Context:
 ${context}
@@ -86,16 +91,27 @@ User Question: ${message}`;
       ),
     ]);
 
-    const replyText = result.response.text().trim();
+    const rawText = result.response.text().trim();
+    const replyText =
+      !rawText || rawText.toLowerCase().includes("don't have that information")
+        ? topMatch?.content || "I don't have that information in my guide."
+        : rawText;
 
     return res.json({
-      reply: replyText || "I don't have that information in my guide.",
+      reply: replyText,
       contextUsed: true,
     });
   } catch (err) {
-    console.error("[ragChat] Chat controller error:", (err as Error).message);
+    console.warn("[ragChat] Gemini call failed/timed out, returning direct context match:", (err as Error).message);
+    
+    // Fail-safe: Return top match content directly instead of static "I don't have that information"
+    const { topMatch } = getRelevantContext(req.body.message || "");
+    const fallbackReply = topMatch
+      ? `${topMatch.content}`
+      : "I don't have that information in my guide.";
+
     return res.json({
-      reply: "I don't have that information in my guide.",
+      reply: fallbackReply,
       contextUsed: false,
     });
   }
