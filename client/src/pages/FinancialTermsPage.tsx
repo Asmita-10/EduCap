@@ -80,14 +80,14 @@ export default function FinancialTermsPage() {
 
           <h1
             className="text-3xl sm:text-4xl font-extrabold text-[#111827] tracking-tight"
-            style={{ marginBottom: "8px" }}
+            style={{ marginTop: "0px", marginBottom: "8px" }}
           >
             Financial Terms Explained
           </h1>
 
           <p
             className="text-sm sm:text-base leading-relaxed"
-            style={{ marginBottom: "28px", color: "#555555" }}
+            style={{ marginTop: "0px", marginBottom: "28px", color: "#555555" }}
           >
             A quick, simplified guide to understanding the core education loan and financial metrics used across EduCap.
           </p>
@@ -134,20 +134,20 @@ export default function FinancialTermsPage() {
             {filteredTerms.map((item) => (
               <div
                 key={item.term}
-                className="bg-[#FAF9F6] border border-[#E2DFD8] rounded-2xl transition-all duration-200 group box-border hover:border-[#1E5D50]/40"
+                className="bg-[#FAF9F6] border border-[#E2DFD8] rounded-2xl transition-all duration-200 group box-border hover:border-[#1E5144] hover:-translate-y-0.5"
                 style={{
                   padding: "20px 24px",
                   boxShadow: "0 4px 12px rgba(0, 0, 0, 0.04)",
                 }}
                 onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLElement).style.boxShadow = "0 8px 24px rgba(0, 0, 0, 0.08)";
+                  (e.currentTarget as HTMLElement).style.boxShadow = "0 8px 20px rgba(0, 0, 0, 0.08)";
                 }}
                 onMouseLeave={(e) => {
                   (e.currentTarget as HTMLElement).style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.04)";
                 }}
               >
                 <h3
-                  className="text-lg text-[#111827] mb-2 tracking-tight group-hover:text-[#1E5D50] transition-colors"
+                  className="text-xl text-[#111827] mb-2 tracking-tight group-hover:text-[#1E5144] transition-colors"
                   style={{ fontWeight: 600 }}
                 >
                   {item.term}
