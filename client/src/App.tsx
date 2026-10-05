@@ -9,6 +9,7 @@ import DashboardPage from "./pages/DashboardPage";
 import ComparePage from "./pages/ComparePage";
 import TermsPage from "./pages/TermsPage";
 import PrivacyPage from "./pages/PrivacyPage";
+import FinancialTermsPage from "./pages/FinancialTermsPage";
 import { useAuthStore } from "./store";
 import AdminLayout from "./components/AdminLayout";
 import AdminLoginPage from "./pages/AdminLoginPage";
@@ -46,6 +47,7 @@ function Layout() {
           <Route path="/register" element={<AuthPage mode="register" />} />
           <Route path="/terms" element={<TermsPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
+          <Route path="/terms-explained" element={<FinancialTermsPage />} />
           <Route
             path="/dashboard"
             element={

@@ -23,6 +23,9 @@ export default function Navbar() {
           <Link to="/wizard" className="btn btn-ghost btn-sm">
             <span className="nav-text">Calculator</span>
           </Link>
+          <Link to="/terms-explained" className="btn btn-ghost btn-sm">
+            <span className="nav-text">Financial Terms</span>
+          </Link>
 
           {isAuthenticated() ? (
             <>
