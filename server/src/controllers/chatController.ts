@@ -68,24 +68,38 @@ export async function chatHandler(req: Request, res: Response) {
       });
     }
 
-    const systemPrompt = `You are EduCap's AI Assistant. Answer the user's question concisely in 2-3 sentences based on the provided context below.
+    const systemPrompt = `
+You are the official EduCap AI Assistant—a helpful, direct, and intelligent financial guide for students.
 
-Context:
+### INSTRUCTIONS:
+1. THINK FIRST: Read the user's query carefully. Identify their exact question or goal (e.g., asking for a definition, comparing two options, or seeking advice on loan risks).
+2. USE CONTEXT: Answer strictly using the information provided in the Context below. Do NOT fabricate numbers, rules, or features outside this context.
+3. ADAPT YOUR TONE & LENGTH:
+   - For simple definitions (e.g., "What is FOIR?"): Give a crisp, 1-2 sentence explanation with the exact key numbers.
+   - For comparisons (e.g., "Floating vs Fixed"): Highlight the core difference directly.
+   - For complex topics (e.g., "How does moratorium compounding work?"): Explain the mechanism clearly in plain English.
+4. NO REPETITIVE TEMPLATES: Avoid using the exact same opening phrase (like "According to EduCap...") for every response. Answer naturally as an expert assistant.
+
+Context from Knowledge Base:
 ${context}
 
-User Question: ${message}`;
+User Question: ${message}
+`;
 
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({
       model: "gemini-1.5-flash",
       generationConfig: {
-        maxOutputTokens: 250,
-        temperature: 0.2,
+        temperature: 0.3, // Low enough for factual accuracy, high enough for natural variety
+        topP: 0.8,
+        maxOutputTokens: 250, // Prevents long, expensive answers
       },
     });
 
     const result = await Promise.race([
-      model.generateContent(systemPrompt),
+      model.generateContent({
+        contents: [{ role: "user", parts: [{ text: systemPrompt }] }],
+      }),
       new Promise<never>((_, reject) =>
         setTimeout(() => reject(new Error("LLM_TIMEOUT")), 8000)
       ),
