@@ -10,8 +10,8 @@ interface KnowledgeChunk {
 
 // ── Explicit In-Memory Keyword Matcher ─────────────────────────────────────
 function getRelevantContext(query: string): { context: string; topMatch?: KnowledgeChunk } {
-  const normalizedQuery = query.toLowerCase().replace(/[^a-z0-9\s]/g, "");
-  const queryTokens = normalizedQuery.split(/\s+/).filter((t) => t.length > 2);
+  const normalizedQuery = query.toLowerCase().replace(/[^a-z0-9\s]/g, " ");
+  const queryTokens = normalizedQuery.split(/\s+/).filter((t) => t.length >= 2);
 
   // Score each chunk based on token matches in title and content
   const scoredChunks = (knowledgeBase as KnowledgeChunk[]).map((chunk) => {
