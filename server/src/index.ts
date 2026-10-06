@@ -4,6 +4,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import rateLimit from "express-rate-limit";
 import cookieParser from "cookie-parser";
+import bcrypt from "bcryptjs";
 
 dotenv.config();
 
@@ -45,32 +46,48 @@ app.get("/health", (_req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
+// Database Auto-Seeder on server boot
+async function ensureAdminExists() {
+  try {
+    const { prisma } = await import("./utils/prisma");
+    const adminPasswordHash = await bcrypt.hash("password", 10);
+    const admin = await prisma.admin.upsert({
+      where: { email: "admin@gmail.com" },
+      update: {
+        passwordHash: adminPasswordHash,
+        name: "System Admin",
+      },
+      create: {
+        email: "admin@gmail.com",
+        passwordHash: adminPasswordHash,
+        name: "System Admin",
+      },
+    });
+    console.log("✅ Admin user account verified/upserted on startup:", admin.email);
+
+    const studentHash = await bcrypt.hash("test123", 10);
+    await prisma.user.upsert({
+      where: { email: "test@gmail.com" },
+      update: {
+        passwordHash: studentHash,
+        name: "Test Student",
+      },
+      create: {
+        email: "test@gmail.com",
+        passwordHash: studentHash,
+        name: "Test Student",
+      },
+    });
+    console.log("✅ Student test account verified/upserted on startup.");
+  } catch (err) {
+    console.error("❌ Error auto-seeding admin/user accounts on startup:", err);
+  }
+}
+
 // Development mode: start in‑memory MongoDB and seed data
 async function startServer() {
-  /*
-  if (process.env.NODE_ENV !== "production") {
-    // const { MongoMemoryReplSet } = await import("mongodb-memory-server");
-    // const replSet = await MongoMemoryReplSet.create({ replSet: { storageEngine: "wiredTiger" } });
-    // const uri = replSet.getUri();
-    // const dbName = "educap";
-    // const finalUri = uri.includes("?") ? uri.replace("/?", `/${dbName}?`) : (uri.endsWith("/") ? `${uri}${dbName}` : `${uri}/${dbName}`);
-    // process.env.DATABASE_URL = finalUri;
-    // console.log("🗄️ In‑memory MongoDB URI for Prisma:", finalUri);
-    //
-    // const { execSync } = await import("child_process");
-    // execSync("npx prisma db push", { stdio: "inherit" });
-    //
-    // const { PrismaClient } = await import("@prisma/client");
-    // global.__prisma = new PrismaClient({ log: ["warn", "error"] });
-    //
-    // const { prisma } = await import("./utils/prisma");
-    // const bcrypt = await import("bcrypt");
-    // const adminHash = await bcrypt.default.hash("password", 10);
-    // await prisma.admin.create({ data: { email: "admin@gmail.com", passwordHash: adminHash, name: "Admin" } }).catch(() => {});
-    // const studentHash = await bcrypt.default.hash("password123", 10);
-    // await prisma.user.create({ data: { email: "test@example.com", passwordHash: studentHash, name: "Test Student" } }).catch(() => {});
-  }
-  */
+  // Auto-seed required admin & user records
+  await ensureAdminExists();
 
   // Register API routes (after DB is ready)
   const { default: authRoutes } = await import("./routes/auth");
