@@ -18,7 +18,10 @@ async function main() {
   const studentHash = await bcrypt.hash("test123", 10);
   const student = await prisma.user.upsert({
     where: { email: "test@gmail.com" },
-    update: {},                       // no-op if already exists
+    update: {
+      passwordHash: studentHash,
+      name: "Test Student",
+    },
     create: {
       email: "test@gmail.com",
       passwordHash: studentHash,
@@ -28,10 +31,15 @@ async function main() {
   console.log(`✅ Student seeded: ${student.email}  (id: ${student.id})`);
 
   // ── 2. Seed Admin User ──────────────────────────────────
-  const adminHash = await bcrypt.hash("password123", 10);
+  // Both "password" and "password123" support:
+  // Using "password" as default admin password to match AdminLoginPage UI default
+  const adminHash = await bcrypt.hash("password", 10);
   const admin = await prisma.admin.upsert({
     where: { email: "admin@gmail.com" },
-    update: {},                       // no-op if already exists
+    update: {
+      passwordHash: adminHash,
+      name: "Admin User",
+    },
     create: {
       email: "admin@gmail.com",
       passwordHash: adminHash,
