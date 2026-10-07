@@ -1,0 +1,77 @@
+[
+  {
+    "id": "calc_moratorium_01",
+    "title": "Moratorium Period Interest Accrual",
+    "content": "During the moratorium period (study duration plus grace period, typically 6 to 12 months after graduation), full EMIs are not required, but simple or compound interest continues to accrue on the principal loan amount. This accrued interest is added to the principal (capitalized) before the official repayment tenure begins, increasing the total effective loan balance."
+  },
+  {
+    "id": "calc_foir_02",
+    "title": "Fixed Obligation to Income Ratio (FOIR)",
+    "content": "FOIR measures the proportion of monthly net salary used to pay fixed debts including loan EMIs. Safe FOIR is 30% or less. Moderate FOIR is 30% to 45%. High Stress FOIR is above 45%, indicating severe financial stress and high risk of default."
+  },
+  {
+    "id": "calc_amortization_03",
+    "title": "Amortization Schedule and Repayment Split",
+    "content": "An amortization schedule details every monthly EMI payment over the loan tenure, showing the split between interest paid and principal paid down. Early EMI payments consist mostly of interest, while later payments pay down more principal."
+  },
+  {
+    "id": "rates_floating_fixed_04",
+    "title": "Floating vs Fixed Interest Rates",
+    "content": "Fixed interest rates remain constant throughout the loan tenure. Floating interest rates fluctuate based on RBI benchmark rate changes (Repo Rate / MCLR / EBLR), affecting monthly EMI amounts or overall loan tenure."
+  },
+  {
+    "id": "rates_subsidized_05",
+    "title": "Subsidized vs Unsubsidized Loans",
+    "content": "On subsidized loans (like CSIS government schemes for eligible economically weaker section students), the central government pays the interest accrued during the moratorium period. On unsubsidized loans, the borrower is responsible for paying or capitalizing all moratorium interest."
+  },
+  {
+    "id": "rules_prepayment_06",
+    "title": "Prepayment Penalty and Foreclosure Rules",
+    "content": "Under RBI guidelines, banks cannot charge prepayment penalties or foreclosure charges on floating rate education loans taken by individual borrowers. Fixed rate loans or non-individual loans may attract prepayment charges."
+  },
+  {
+    "id": "fees_margin_07",
+    "title": "Margin Money and Collateral Requirements",
+    "content": "Margin money is the percentage of total education expense that the student must self-fund. In India, education loans up to Rs 4 Lakhs generally require 0% margin money. Studies in India require around 5% margin, while study abroad requires around 15% margin money above Rs 4 Lakhs. Collateral (property or liquid security) is typically mandatory for loans above Rs 7.5 Lakhs."
+  },
+  {
+    "id": "educap_overview_08",
+    "title": "EduCap Platform Calculator and Features",
+    "content": "EduCap is a student loan risk planning platform. It calculates inflation-adjusted tuition and living costs, detects moratorium interest traps, computes FOIR risk ratings using AI salary forecasts and allows side-by-side plan comparisons."
+  },
+  {
+    "id": "tax_section_80e_09",
+    "title": "Tax Benefits under Section 80E",
+    "content": "Under Section 80E of the Income Tax Act in India, individual borrowers or co-borrowers (parents/spouses) can claim 100% tax deduction on the interest portion paid towards an education loan for higher studies. There is no upper limit on the interest amount deductible, and the tax benefit can be claimed for up to 8 consecutive financial years starting from the repayment commencement year."
+  },
+  {
+    "id": "credit_cibil_impact_10",
+    "title": "CIBIL Credit Score and Co-Applicant Role",
+    "content": "Education loans in India require a co-applicant (parent, guardian, or spouse) whose CIBIL credit score and financial income profile are evaluated during loan approval. Timely EMI repayments build the student's credit history, while missed EMIs or defaults damage both the student's and co-applicant's CIBIL credit scores."
+  },
+  {
+    "id": "disbursement_process_11",
+    "title": "Loan Disbursement and Expense Coverage",
+    "content": "Education loans cover tuition fees, examination fees, library/laboratory charges, hostel fees, purchase of books/equipment, laptop expenses, and travel passage for study abroad. Tuition fees are disbursed directly to the college or university bank account, while living allowances and book expenses are released directly to the student's account."
+  },
+  {
+    "id": "moratorium_mitigation_12",
+    "title": "Moratorium Interest Reduction Strategy",
+    "content": "To prevent interest capitalization during the study period, students can pay partial or simple interest during the moratorium. Paying even Rs 2,000 to Rs 5,000 monthly during college prevents interest compounding on the principal, significantly lowering the post-graduation EMI and total loan cost."
+  },
+  {
+    "id": "repayment_tenure_options_13",
+    "title": "Repayment Tenure and Loan Duration",
+    "content": "Education loan repayment tenures typically range from 5 to 15 years after the moratorium period ends. Choosing a longer tenure (e.g., 15 years) reduces monthly EMI amounts to keep FOIR low, but increases total interest paid over the life of the loan."
+  },
+  {
+    "id": "default_consequences_14",
+    "title": "Loan Default Risks and NPA Classification",
+    "content": "If EMIs are unpaid for more than 90 days, the education loan is classified as a Non-Performing Asset (NPA). Consequences include severe damage to CIBIL credit scores, legal recovery notices to the student and co-applicant, and forfeiture of pledged collateral property."
+  },
+  {
+    "id": "nbfc_vs_banks_15",
+    "title": "Public Banks vs Private Banks and NBFCs",
+    "content": "Public sector banks (e.g., SBI, Bank of Baroda) offer lower interest rates and 0% prepayment charges, but require stricter collateral above Rs 7.5 Lakhs. Private banks and NBFCs (e.g., HDFC Credila, Avanse) offer faster loan processing and collateral-free loans for premier universities, but charge slightly higher interest rates and processing fees."
+  }
+]
